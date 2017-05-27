@@ -31,7 +31,6 @@ iof = do
 word_to_MWord :: String -> IO MWord
 word_to_MWord wrd =
 	do
-		{-let wOut = if ( (init (init wrd)), ((last (init wrd)):(last wrd):[]) ) -}
 		is_place   <- is_in(wrd, "places")
 		is_place_w <- is_in( (\(x:xs) -> Data.Char.toUpper(x):xs) wrd, "places")
 		if is_place || is_place_w then return $ Place(wrd) else
@@ -50,10 +49,23 @@ word_to_MWord wrd =
 								if is_verb || is_verb_w || is_verb_ww then return $ Verb(wrd) else
 									do
 										return $ Unknown(wrd)
+		{-ok. this is dumb, i know-}
+to_ioMW :: MWord -> IO MWord
+to_ioMW mw =
+	do
+		putStr ""
+		return $ mw
 
+map_unknowns :: [MWord] -> [IO MWord]
+map_unknowns lst =
+	case lst of
+		[] -> []
+		{-only need two consecutives case bc two will become one on next recurse-}
+		Unknown(x):Unknown(y):xs -> word_to_MWord(x ++ " " ++ y):map_unknowns(xs)
+		x:y -> to_ioMW(x):map_unknowns(y)
 
 sentence_to_mapped :: String -> [IO MWord]
-sentence_to_mapped str = map word_to_MWord(splitBy ' ' str)
+sentence_to_mapped str = (map word_to_MWord(splitBy ' ' str))
 
 			{- (positive option, negative option), top_text, bottom_text -} 
 to_meme :: [MWord] -> [([String], (String, String))]
@@ -61,12 +73,11 @@ to_meme mw =
 	case mw of
 		[] -> [(["bad luck brian"], ("tried to make a meme from this article", "failed"))]
 		PNoun(x):Verb(y):Verb(z):xs -> [(["blb"], (x, y))]
-		Adj(x):Noun(y):Verb(z):xs -> [(["blb"], ((x ++ " " ++ y), (z)))] {- idk -} 
+		Adj(x):Noun(y):Verb(z):xs -> [(["success kid", "bad luck brian"], ((x ++ " " ++ y), (z)))] {- idk -} 
 	{- TODO: pattern match on things w/ no constructors in this situation - i -} 
 		{- need to be able to fit any word somewhere -} 
 	{- one of the meme type options will be chosen based on sent analysis on z ggg/blb -} 
 		Place(x):Noun(y):Verb(z):Noun(q):xs -> [(["success kid", "scumbag steve"], ((y ++ " goes to " ++ x), (z ++ " " ++ q))), (["success kid", "bad luck brian"], (q ++ " in " ++ x, "gets " ++ init z ++ "ed"))]
-						{- TODO: remove | from definition above. make it a tuple (sk, st), to be pretty printed as sk | st, like above -} 
 		{- Noun(x):xs -> [("", ("", ""))] -} 
 		{- _ did _ -} 
 		Place(x):[] -> [(["bad luck brian"], (x, x))]
@@ -89,10 +100,12 @@ pp_with_delim m_lst =
 {- need to print out type with "( before it , ',' , ("top", "bottom") -} 
 main =
 	do
+		{-TODO: incorporate map_unknown into sentence_to_mapped to make this less gross-}
 		a <- getArgs
 		let senny = sentence_to_mapped(head a)
 		noIO <- (sequence senny)
-		with_delims <- sequence(pp_with_delim(to_meme(noIO)))
+		let unk = map_unknowns noIO
+		nOIO <- (sequence unk)
+		{-with_delims <- sequence(pp_with_delim(to_meme(noIO)))-}
+		with_delims <- sequence(pp_with_delim(to_meme(nOIO)))
 		print(with_delims)
-		{- print(to_meme(noIO)) -} 
-		{- print(noIO) -} 

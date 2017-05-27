@@ -6,13 +6,20 @@ import sys
 class Meme:
 
         base = "https://api.imgflip.com/"
+        reference = requests.get(base + "get_memes").json()
+        ref = {}
+        for i in reference['data']['memes']:
+                ref[i['name']] = i['id'] 
 
+        def to_cam(self, wrd):
+                new_str = ''
+                for i in wrd.split(' '):
+                        for ltr in range(len(i)):
+                                if ltr == 0: new_str += (' ' + i[ltr].upper())
+                                else: new_str += i[ltr]
+                return new_str[1:len(new_str)]
         def meme_to_id(self, meme_name):
-                response = requests.get(self.base + "get_memes").json()
-#               if response['success']  check if success is true
-                for meme in response['data']['memes']:
-                        if (meme['name'].lower()).find(meme_name.lower()) != -1:
-                                return meme['id']
+                if self.to_cam(meme_name) in self.ref: return self.ref[self.to_cam(meme_name)]
                 return "you fucked up"  
 
 
@@ -46,7 +53,7 @@ class Meme:
 
                         mem = self.gen_meme(self.meme_to_id(m_type), top_text, bot_text).json()
                         if 'data' in mem: print(mem['data']['url'])
-                        else: print("nione")
+                        else: print("incorrect meme template")
                 else: print("none")
 if __name__ == '__main__':
         Meme().spit(sys.argv[1])

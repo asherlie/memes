@@ -30,7 +30,6 @@ class Meme:
                                 'password': '____',
                                 'text0': top, #top text for meme
                                 'text1': bottom, #bottom text for meme
-#                               self.meme_to_id(meme    
                                 }
                 response = requests.post(self.base + "caption_image", params=parameters)
                 return response
@@ -44,16 +43,15 @@ class Meme:
 
                         if len(m_type) != 1:
                                 sent = requests.post('http://text-processing.com/api/sentiment/', 'text=' + strng).json()
-                                # print(sent)
                                 if sent['probability']['pos'] > sent['probability']['neg']: 
                                     m_type = m_type[0]
                                 else: 
                                     m_type = m_type[1]
                         else: m_type = m_type[0]
-
                         mem = self.gen_meme(self.meme_to_id(m_type), top_text, bot_text).json()
-                        if 'data' in mem: print(mem['data']['url'])
-                        else: print("incorrect meme template")
-                else: print("none")
+                        if 'data' in mem:
+                            return mem['data']['url']
+                        else: return "incorrect meme template"
+                else: return "meme formatted incorectly"
 if __name__ == '__main__':
-        Meme().spit(sys.argv[1])
+        print(Meme().spit(sys.argv[1]))

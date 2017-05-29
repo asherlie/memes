@@ -18,6 +18,6 @@ def get_articles(n):
         for article in res:
             articles.append([article['headline']['main'] + article['snippet'].strip('....') + article['lead_paragraph'], article['web_url']])
             if len(articles) == n: break
-            time.sleep(.9) #bc the usage limit of the api is 1 call/second
         if len(articles) == n: break
+        time.sleep(.9) #bc the usage limit of the api is 1 call/second
     return articles

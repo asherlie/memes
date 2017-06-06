@@ -34,24 +34,42 @@ class Meme:
                 response = requests.post(self.base + "caption_image", params=parameters)
                 return response
         def spit(self, strng):
-                a = os.popen('./meme "' + strng + '"').read()
-                if a.find('&&') != -1:
-                        to_parse = a.split('&&')[random.randrange(len(a.split('&&'))-1)]
-                        m_type = to_parse.split('^^')[0].split('|')
-                        top_text = to_parse.split('^^')[1]
-                        bot_text = to_parse.split('^^')[2]
+                a = os.popen('./meme "' + strng + '"').read().strip('&&[()]\n')
+                if a.find('&&') != -1: to_parse = a.split('&&')[random.randrange(len(a.split('&&'))-1)]
+                else: to_parse = a
+                m_type = to_parse.split('^^')[0].split('|')
 
-                        if len(m_type) != 1:
-                                sent = requests.post('http://text-processing.com/api/sentiment/', 'text=' + strng).json()
-                                if sent['probability']['pos'] > sent['probability']['neg']: 
-                                    m_type = m_type[0]
-                                else: 
-                                    m_type = m_type[1]
-                        else: m_type = m_type[0]
-                        mem = self.gen_meme(self.meme_to_id(m_type), top_text, bot_text).json()
-                        if 'data' in mem:
-                            return mem['data']['url']
-                        else: return "incorrect meme template"
-                else: return "meme formatted incorectly"
+                top = []; bot = []
+                top_text = ''; bot_text = ''
+                if to_parse.find('@@') != -1:
+                        for i in to_parse.split('^^')[1].split('@@'):
+                                top.append(i.split('#%')[0])
+                                bot.append(i.split('#%')[1])
+                else:
+                        top.append(to_parse.split('^^')[1].split('#%')[0])
+                        bot.append(to_parse.split('^^')[1].split('#%')[1])
+
+                if len(m_type) != 1:
+                        sent = requests.post('http://text-processing.com/api/sentiment/', 'text=' + strng).json()
+                        if sent['probability']['pos'] > sent['probability']['neg']: 
+                            m_type = m_type[0]
+                            top_text = top[0] #can just do this bc it defaults to [0] anyway
+                            bot_text = bot[0] #and [0] is positive option
+                        else: 
+                            m_type = m_type[1]
+                            if len(top) == 2:
+                                top_text = top[1]
+                                bot_text = bot[1]
+                            else:
+                                top_text = top[0]
+                                bot_text = bot[0]
+                else:
+                    m_type = m_type[0]
+                    top_text = top[0]
+                    bot_text = bot[0]
+                mem = self.gen_meme(self.meme_to_id(m_type), top_text, bot_text).json()
+                if 'data' in mem:
+                    return mem['data']['url']
+                else: return "incorrect meme template"
 if __name__ == '__main__':
         print(Meme().spit(sys.argv[1]))

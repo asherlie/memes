@@ -53,6 +53,7 @@ word_to_MWord wrd =
                                                             if Data.Char.isUpper (head wrd) then
                                                             {- makes things a lot slower but NYTimes uses camelcase for their article titles for some reason... -}
                                                                   word_to_MWord (Data.Char.toLower(head wrd):(tail wrd))
+                                                                  {-pass it thru the -}
                                                             else
                                                                   return $ Unknown(wrd)
             {-ok. this is dumb, i know-}
@@ -66,7 +67,7 @@ map_unknowns :: [MWord] -> [IO MWord]
 map_unknowns lst =
       let
             has_unknown :: [MWord] -> Bool
-            has_unknown lst = elem True ((map (\x -> case x of Unknown(i) -> True; _ -> False)) lst)
+            has_unknown lst = case lst of [] -> False; Unknown(x):xs -> True; x:y -> has_unknown(y);
             consolidate_unknowns :: [MWord] -> [MWord]
             consolidate_unknowns lst =
                   if has_unknown lst then
@@ -85,18 +86,20 @@ map_unknowns lst =
             map_VU(consolidate_unknowns(lst))
 
 sentence_to_mapped :: String -> [IO MWord]
-sentence_to_mapped str = (map word_to_MWord(splitBy ' ' str))
+sentence_to_mapped str =
+      let
+            cap_to_space str =
+                  case str of
+                        []  -> [] 
+                        x:y -> if Data.Char.isUpper x then ' ':(Data.Char.toLower x):cap_to_space(y) else x:cap_to_space(y)
+      in
+            (map word_to_MWord(splitBy ' ' (cap_to_space(str))))
+            
 
                   {- (positive option, negative option), top_text, bottom_text -} 
 to_meme :: [MWord] -> [([String], [(String, String)])]
 to_meme mw =
       case mw of
-{-change form to this: based on sentiment, a top bottom pair will be chosen - lets me use sent analysis with things that don't fit the same format-}
-      {-  [ (["positive", "negative"], [("top", "bottom"), ("top", "bottom")] ) ]  -}
-            {-  maybe change the [pos, neg] to be a (pos, neg)  -}
-                  {-they need to be lists in case there's one option-}
-                        {- also opens the option of a neutral choice -}
-
             [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")] )]
       {- noun, verb, noun { -}
             Adj(x):Noun(y):Verb(z):Noun(q):xs -> [(["The Most Interesting Man In The World"], [( ("i don't always " ++ z ++ " " ++ q), ("but when i do, i'm " ++ x))]), (["Am I The Only One Around Here"], [(("am i the only one around here"), ("who " ++ z ++ " " ++ q))]), (["success kid", "badluck brian"], [((x ++ " " ++ y), (z ++ " " ++ q))])]
@@ -143,6 +146,9 @@ main =
             let unk = map_unknowns noIO
             nOIO <- (sequence unk)
             {-with_delims <- sequence(pp_with_delim(to_meme(noIO)))-}
-            {-print(nOIO)-}
-            with_delims <- sequence(pp_with_delim(to_meme(nOIO)))
-            print(with_delims)
+            print(nOIO)
+
+            {-
+             -with_delims <- sequence(pp_with_delim(to_meme(nOIO)))
+             -print(with_delims)
+             -}

@@ -34,7 +34,7 @@ class Meme:
                 response = requests.post(self.base + "caption_image", params=parameters)
                 return response
         def spit(self, strng):
-                a = os.popen('./meme "' + strng + '"').read().strip('&&[()]\n')
+                a = os.popen('./meme "' + strng + '"').read().encode('ascii', 'ignore').decode().strip('&&[()]\n')
                 if a.find('&&') != -1: to_parse = a.split('&&')[random.randrange(len(a.split('&&'))-1)]
                 else: to_parse = a
                 m_type = to_parse.split('^^')[0].split('|')

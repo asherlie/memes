@@ -2,6 +2,8 @@ import System.IO
 import System.Environment
 import Data.Char
 
+import NLP.POS
+
 data MWord = Adj String | Noun String | Verb String | Place String | Num String | Unknown String | VUnknown String deriving (Show)
 {- VUnknown is verified unknown, meaning that it is not part of a multi-word POS - just realized it's only used within map_unknowns and is reclassified using word_to_MWord after - whatever. -}
 
@@ -85,6 +87,23 @@ map_unknowns lst =
       in
             map_VU(consolidate_unknowns(lst))
 
+stm_e :: String -> IO [MWord]
+stm_e str =
+      let
+            to_MW :: [[String]] -> [MWord]
+            to_MW(sll) =
+                  case sll of
+                        x:xs -> 
+                              case x of
+                                          {- other POS should be included in this one block of if then else's -}
+                                    f:s:[] -> if s == "NN" then Noun(f):to_MW(xs) else Unknown(f):to_MW(xs) {- should be the only case -}
+                        []   -> []
+                  
+      in
+            do
+                  tagger <- defaultTagger
+                  return $ (to_MW((map (\x -> splitBy '/' x)(splitBy ' ' (tagStr tagger str)))))
+                  {-return $ ((map (\x -> splitBy '/' x)(splitBy ' ' (tagStr tagger str)))))-}
 sentence_to_mapped :: String -> [IO MWord]
 sentence_to_mapped str =
       let
@@ -146,9 +165,7 @@ main =
             let unk = map_unknowns noIO
             nOIO <- (sequence unk)
             {-with_delims <- sequence(pp_with_delim(to_meme(noIO)))-}
-            print(nOIO)
+            {-print(nOIO)-}
 
-            {-
-             -with_delims <- sequence(pp_with_delim(to_meme(nOIO)))
-             -print(with_delims)
-             -}
+            with_delims <- sequence(pp_with_delim(to_meme(nOIO)))
+            print(with_delims)

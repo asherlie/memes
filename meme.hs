@@ -2,6 +2,8 @@ import System.IO
 import System.Environment
 import Data.Char
 
+import qualified Data.ByteString.Lazy as B
+import Data.Aeson
 import NLP.POS
 
 data MWord = Adj String | Noun String | Verb String | Place String | Num String | Unknown String | VUnknown String deriving (Show)
@@ -87,6 +89,38 @@ map_unknowns lst =
       in
             map_VU(consolidate_unknowns(lst))
 
+{-TODO: deal with camelcase. things are tagged as proper nouns bc of camelcase-}
+{-this function is mean to to be used in conjunction with the python pattern finder-}
+write_pats_from_art :: (FilePath, FilePath) -> IO [()]
+write_pats_from_art(f_write, f_art) =
+      let
+            load_json :: FilePath -> IO [[String]]
+            load_json str =
+                  do
+                        {-:set -XOverloadedStrings-}
+                        let get_it = B.readFile str
+                        jj <- get_it
+                        let decoded = decode jj :: Maybe [[String]]
+                        return $ ((\(Just(x)) -> x)decoded)
+
+            write_pats :: ([String], FilePath) -> IO [()]
+            write_pats(x, y) =
+                  let
+                        write_pat :: String -> IO ()
+                        write_pat str =
+                              do
+                                    tagger <- defaultTagger
+                                    let tagged = tagStr tagger str
+                                    appendFile y (tagged ++ "\n")
+                  in
+                        do
+                              sequence (map write_pat x)
+      in
+            do
+                  arts <- load_json f_art
+                  write_pats((map (\(x:y:xs) -> x) arts), f_write)
+
+
 stm_e :: String -> IO [MWord]
 stm_e str =
       let
@@ -96,7 +130,7 @@ stm_e str =
                         x:xs -> 
                               case x of
                                           {- other POS should be included in this one block of if then else's -}
-                                    f:s:[] -> if s == "NN" then Noun(f):to_MW(xs) else Unknown(f):to_MW(xs) {- should be the only case -}
+                                    f:s:[] -> if s == "NN" then Noun(f):to_MW(xs) else if s == "VBS" then Verb(f):to_MW(xs) else Unknown(f):to_MW(xs) {- should be the only case -}
                         []   -> []
                   
       in
@@ -160,8 +194,10 @@ main =
       do
             {-TODO: incorporate map_unknown into sentence_to_mapped to make this less gross-}
             a <- getArgs
-            let senny = sentence_to_mapped(head a)
-            noIO <- (sequence senny)
+            {-let senny = sentence_to_mapped(head a)-}
+            let senny = stm_e(head a)
+            {-noIO <- (sequence senny)-}
+            noIO <- (senny)
             let unk = map_unknowns noIO
             nOIO <- (sequence unk)
             {-with_delims <- sequence(pp_with_delim(to_meme(noIO)))-}

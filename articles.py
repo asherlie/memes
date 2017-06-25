@@ -21,3 +21,23 @@ def get_articles(n):
         if len(articles) == n: break
         time.sleep(.9) #bc the usage limit of the api is 1 call/second
     return articles
+def get_articles_news(n, src):
+    arts = []
+    base = 'https://newsapi.org/v1/articles'
+    params = {'apiKey': '________________________________', 'source': src}
+
+    while True:
+        tmp_res = requests.get(base, params).json()['articles']
+        for i in tmp_res:
+            arts.append(['', i['url']])
+            tmp_str = ''
+            if 'description' in i:
+                tmp_str += str(i['description'])
+                # arts.append([i['description'] + ' ' + i['title'], i['url']])
+            if 'title' in i:
+                tmp_str += str(i['title'])
+            arts[len(arts)-1][0] = tmp_str
+
+            if len(arts) == n: break
+        if len(arts) == n: break
+    return arts

@@ -32,12 +32,18 @@ def find_p_chatter(prepped, consec_words=4):
                 ret[tmp_type][1].append(tmp_str)
                 # ret[tmp_type][1] = tmp_str
     return ret
-
-def pp_chat(pats, min_occ=1, rev=False):
+def pp_chat(pats, min_occ=1, rev=False, must_include = ['']):
+    def has_items(strn, items):
+        for i in items:
+            if strn.find(i) == -1: return False
+        return True
     pat_id_sorted = sorted(pats, key=lambda k: pats[k][0], reverse=rev) # sort by num of occurences
+    c=0
     for i in pat_id_sorted:
-        if pats[i][0] >= min_occ:
+        if pats[i][0] >= min_occ and has_items(i, must_include):
             print(i + ' : ' + str(pats[i][0]) + ' : ' + pats[i][1][0])
+            c+=1
+    return c
 
 def ppl(lst):
     strn = ''

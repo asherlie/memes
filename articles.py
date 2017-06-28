@@ -1,6 +1,7 @@
 import json
 import requests
 import time
+import math
 from datetime import date, timedelta
 
 base = 'http://api.nytimes.com/svc/search/v2/articlesearch.json?%s'
@@ -41,3 +42,24 @@ def get_articles_news(n, src):
             if len(arts) == n: break
         if len(arts) == n: break
     return arts
+def get_articles_guardian(n=50):
+    base = 'https://content.guardianapis.com/search'
+    arts = []
+    i = 0
+    while True:
+        i+=1
+        params = {'api-key': '____________________________________', 'page-size': 50, 'page': i}
+        ret = requests.get(base, params).json()['response']['results']
+        for art in ret:
+            arts.append([art['webTitle'], art['webUrl']])
+            if len(arts) == n: return arts
+        print(str(len(arts)) + ' added so far')
+    return arts
+
+def w2f(js_o, fname):
+    with open(fname, 'w') as f:
+        json.dump(js_o, f)
+def rff(fname):
+    with open(fname, 'r') as f:
+        ret = json.load(f)
+    return ret

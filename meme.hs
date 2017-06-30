@@ -1,12 +1,17 @@
 import System.IO  
+import System.IO.Strict
+
 import System.Environment
 import Data.Char
+import Data.List
+{-import Data.Text-}
 
 import qualified Data.ByteString.Lazy as B
 import Data.Aeson
 import NLP.POS
+import NLP.Types.Tree
 
-data MWord = Adj String | Noun String | Verb String | Place String | Num String | Unknown String | VUnknown String deriving (Show)
+data MWord = Adj String | Noun String | Verb String | Place String | Num String | Unknown String | PNoun String | VUnknown String deriving (Show)
 {- VUnknown is verified unknown, meaning that it is not part of a multi-word POS - just realized it's only used within map_unknowns and is reclassified using word_to_MWord after - whatever. -}
 
 splitBy cha = foldr f [[]] 
@@ -17,7 +22,7 @@ is_in :: (String, FilePath)-> IO Bool
 is_in (wrd, fname) =
       do
             {- TODO: stop reading from file to check for each individual word -}
-            f <- readFile fname
+            f <- System.IO.Strict.readFile fname
             let words = lines f
             return $ ( elem (wrd) words )
       
@@ -91,6 +96,24 @@ map_unknowns lst =
 
 {-TODO: deal with camelcase. things are tagged as proper nouns bc of camelcase-}
 {-this function is mean to to be used in conjunction with the python pattern finder-}
+
+{-
+ - {-the point of this is to expose the constructors behind tag to maek pattern matching easier once this all compiles -}
+ -tag_str :: String -> taggedSentence
+ -tag_str str =
+ -      let
+ -            sent_to_lst :: Sentence -> [String]
+ -            {-sent_to_lst :: (Sentence, [NLP.Corpora.Conll.Tag]) -> -}
+ -            sent_to_lst sent = Prelude.map (\(Token(x)) -> x) ((\(Sent(i)) -> i)((\(x,y)->x)unz))
+ -      in
+ -            do
+ -                  tagger <- defaultTagger
+ -                  let tagged = unzipTags (tag tagger (pack str))
+ -
+ -            {-applyTags tagged ((\(x,y) -> y)tagged) ((\(x,y) -> x)tagged) -}
+ -            {-lol this just retags. v unproductive-}
+ -
+ -}
 write_pats_from_art :: (FilePath, FilePath) -> IO [()]
 write_pats_from_art(f_write, f_art) =
       let
@@ -115,28 +138,58 @@ write_pats_from_art(f_write, f_art) =
                   in
                         do
                               sequence (map write_pat x)
+            {-i want to replace all words with lower case unless they're a place-}
+            upper str = map Data.Char.toLower str
+            {- this is not used with anything but NYTimes -}
+            prep_lst :: [String] -> [IO String]
+            prep_lst lst = 
+                  let
+                        prep_str :: String -> IO String
+                        prep_str str = 
+                              do
+                                    is_place <- is_in(str, "places")
+                                    {-is_place <- iof-}
+                                    return $ if Data.Char.isUpper ((\(x:xs) -> x) str) && is_place then str else map Data.Char.toLower str
+                  in
+                        map prep_str lst
       in
             do
                   arts <- load_json f_art
-                  write_pats((map (\(x:y:xs) -> x) arts), f_write)
-
+                  {-prepped_lst <- sequence (prep_lst (map (\(x:y:xs) -> x) arts))-}
+                  {-write_pats(prepped_lst, f_write)-}
+                  write_pats((map (\(x:y:xs) -> x)arts), f_write) {- don't need to convert to lowercase if not using NYTimes -}
+                  {-write_pats((map (\(x:y:xs) -> upper x) arts), f_write)-}
 
 stm_e :: String -> IO [MWord]
 stm_e str =
       let
+            contains :: (String, String) -> Bool
+            contains(subs, s) =
+                  let
+                        f :: (String, Int) -> String
+                        f(str, x) =
+                             case str of
+                                    [] -> ""
+                                    o:r -> if x == 0 then "" else ([o] ++ (f(r, x-1)))
+                  in
+                        case s of
+                              x:y -> if (length (x:y)) < (length subs) then False else if f(s, (length subs)) == subs then True else contains(subs, y)
+                              _   -> False
+
             to_MW :: [[String]] -> [MWord]
             to_MW(sll) =
                   case sll of
                         x:xs -> 
                               case x of
                                           {- other POS should be included in this one block of if then else's -}
-                                    f:s:[] -> if s == "NN" then Noun(f):to_MW(xs) else if s == "VBS" then Verb(f):to_MW(xs) else Unknown(f):to_MW(xs) {- should be the only case -}
+                                    f:s:[] -> if s == "NNP" then PNoun(f):to_MW(xs) else if contains("NN", s) then Noun(f):to_MW(xs) else if contains("VB", s) then Verb(f):to_MW(xs) else Unknown(f):to_MW(xs) {- should be the only case -}
                         []   -> []
                   
       in
             do
                   tagger <- defaultTagger
                   return $ (to_MW((map (\x -> splitBy '/' x)(splitBy ' ' (tagStr tagger str)))))
+            {-shitty way to to do this - i can definitely figure out a way to use tag to expose original constructors-}
                   {-return $ ((map (\x -> splitBy '/' x)(splitBy ' ' (tagStr tagger str)))))-}
 sentence_to_mapped :: String -> [IO MWord]
 sentence_to_mapped str =

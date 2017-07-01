@@ -1,18 +1,57 @@
 import os
 # import articles
 
+def _enumerate(spl):
+    # spl = strn.split(' ')
+    occ = {x: 0 for x in spl}
+    for i in range(len(spl)):
+        if spl[i] in spl[i+1:]:
+            occ[spl[i]] += 1
+    for i in range(len(spl)-1, -1, -1): #iterate backwards
+        bef = spl[i]
+        spl[i] += ('_' + str(occ[spl[i]]))
+        occ[bef] -= 1
+    return spl
 # the article data for this is prepared in write_pats_from_art in meme.hs
 def prep_data_chatter(fname):
+    # def _enumerate(strn):
+    def _enumerate(spl):
+        # spl = strn.split(' ')
+        occ = {x: 0 for x in spl}
+        for i in range(len(spl)):
+            if spl[i] in spl[i+1:]:
+                occ[spl[i]] += 1
+        for i in range(len(spl)-1, -1, -1): #iterate backwards
+            bef = spl[i]
+            spl[i] += ('_' + str(occ[spl[i]]))
+            occ[bef] -= 1
+        return spl
     ret = []
     with open(fname, 'r') as f:
         ff = f.readlines()
     for i in ff:
         tmp = i.strip('\n').split(' ')
+        # print(i) # this makes a lot of sense - i need to split by '/' first then enum
+        # tmp = _enumerate(i.strip('\n'))
         tmp_el = []
         for i in tmp:
             tmp_el.append(i.split('/'))
         ret.append(tmp_el)
-    return ret
+    # return ret
+    # numb = _enumerate(x[1] for x in ret)
+    fin = []
+    c=0
+    oc=0
+    for i in _enumerate([x[1] for x in ret]):
+        fin.append([ret[c][0], i])
+        c+=1
+    for i in ret:
+        for enumed in _enumerate([x[1] for x in i]):
+            fin.append([ret[oc][c], enumed])
+            c += 1
+        oc += 1
+    return fin
+
             
 def find_p_chatter(prepped, consec_words=4):
     ret = {}
@@ -33,6 +72,8 @@ def find_p_chatter(prepped, consec_words=4):
                 # ret[tmp_type][1] = tmp_str
     return ret
 def pp_chat(pats, min_occ=1, rev=False, must_include = ['']):
+    relevant = []
+    relev = {}
     def has_items(strn, items):
         for i in items:
             if strn.find(i) == -1: return False
@@ -41,9 +82,64 @@ def pp_chat(pats, min_occ=1, rev=False, must_include = ['']):
     c=0
     for i in pat_id_sorted:
         if pats[i][0] >= min_occ and has_items(i, must_include):
-            print(i + ' : ' + str(pats[i][0]) + ' : ' + pats[i][1][0])
+            print(str(c) + ' : ' + i + ' : ' + str(pats[i][0]) + ' : ' + pats[i][1][0])
+            # relevant.append(pats[i][1])
+            # relevant.append({i: 0})
+            # relev[i] = 0
+            relev[i] = pats[i]
+            # relev
             c+=1
-    return c
+    # for i in relevant:
+        # relev[i[]
+    # return [c, relevant, pats] #pats is also returned so this can act as a filter for create_pat_chat
+    return [c, relev, pats] #pats is also returned so this can act as a filter for create_pat_chat
+
+def create_pat_chat(pp_ch):
+    def add_num(strn):
+        ret = ''
+        spl = strn.split(' ')
+        for i in range(len(spl)):
+            ret += ('(' + str(i) + ' : ' + spl[i] + '), ')
+        return ret
+    # def add_num_dups(strn):
+        # return  strn + 'dup'
+    #trying to add nums to original find_pat or prep_chat
+    patterns = []
+    inp = ''
+    c = 0
+    # for pat in pp_ch[2]: #this is unfiltered. bad.
+    for pat in pp_ch[1]:
+        # pat = add_num_dups(pat)
+        c+=1
+        # print('now on pattern number ' + str(c) + '/' + str(len(pp_ch[2])))
+        print('now on pattern number ' + str(c) + '/' + str(len(pp_ch[1])))
+        if inp == 'q': next
+        good = []
+        for occurence in pp_ch[2][pat][1]:
+            print(add_num(occurence))
+            inp = input('enter order - div by "|" ')
+            if inp == 'q': break
+            good.append(inp)
+        checker = {x: 0 for x in good}
+        # for i in {checker[x]: 0 for x in good}:
+        print(good)
+        # for i in checker:
+        for i in good:
+            checker[i] += 1
+        print(checker)
+        wip = ''
+        for i in checker:
+            if checker[i] >= 2:
+                print('ayy ' + str(i) + ' appeared ' + str(checker[i]))
+                # for cha in checker[i]:
+                for cha in i:
+                    # won't work for pat lengths over 9
+                    if cha == '|': wip += ' | '
+                    else: wip += (pat.split(' ')[int(cha)] + ' ')
+        if wip != '': patterns.append(pat + ' -> ' + wip)
+    return patterns
+       #i have 'NNP VBZ NN' and 21|0
+       # pos.split(' ')
 
 def ppl(lst):
     strn = ''

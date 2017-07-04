@@ -1,17 +1,6 @@
 import os
 # import articles
 
-def _enumerate(spl):
-    # spl = strn.split(' ')
-    occ = {x: 0 for x in spl}
-    for i in range(len(spl)):
-        if spl[i] in spl[i+1:]:
-            occ[spl[i]] += 1
-    for i in range(len(spl)-1, -1, -1): #iterate backwards
-        bef = spl[i]
-        spl[i] += ('_' + str(occ[spl[i]]))
-        occ[bef] -= 1
-    return spl
 # the article data for this is prepared in write_pats_from_art in meme.hs
 def prep_data_chatter(fname):
     # def _enumerate(strn):
@@ -31,27 +20,22 @@ def prep_data_chatter(fname):
         ff = f.readlines()
     for i in ff:
         tmp = i.strip('\n').split(' ')
-        # print(i) # this makes a lot of sense - i need to split by '/' first then enum
-        # tmp = _enumerate(i.strip('\n'))
         tmp_el = []
         for i in tmp:
             tmp_el.append(i.split('/'))
         ret.append(tmp_el)
-    # return ret
-    # numb = _enumerate(x[1] for x in ret)
     fin = []
     c=0
     oc=0
-    for i in _enumerate([x[1] for x in ret]):
-        fin.append([ret[c][0], i])
-        c+=1
-    for i in ret:
-        for enumed in _enumerate([x[1] for x in i]):
-            fin.append([ret[oc][c], enumed])
-            c += 1
-        oc += 1
+    for article in ret:
+        tmp_art = []
+        for word in _enumerate([x[1] for x in article]):
+            tmp_art.append([ret[oc][c][0], word])
+            fin.append(tmp_art)
+            c+=1
+        oc+=1
+        c = 0
     return fin
-
             
 def find_p_chatter(prepped, consec_words=4):
     ret = {}

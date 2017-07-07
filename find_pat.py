@@ -21,8 +21,10 @@ def prep_data_chatter(fname):
     for i in ff:
         tmp = i.strip('\n').split(' ')
         tmp_el = []
+        # tmp_el = set()
         for i in tmp:
             tmp_el.append(i.split('/'))
+            # tmp_el.add(i.split('/'))
         ret.append(tmp_el)
     fin = []
     c=0
@@ -50,7 +52,8 @@ def find_p_chatter(prepped, consec_words=4):
 
             if tmp_type not in ret:
                 ret[tmp_type] = [1, [tmp_str]]
-            else:
+            # else:
+            elif tmp_str not in ret[tmp_type][1]: # to avoid duplicates
                 ret[tmp_type][0] += 1
                 ret[tmp_type][1].append(tmp_str)
                 # ret[tmp_type][1] = tmp_str
@@ -96,31 +99,40 @@ def create_pat_chat(pp_ch):
         # pat = add_num_dups(pat)
         c+=1
         # print('now on pattern number ' + str(c) + '/' + str(len(pp_ch[2])))
-        print('now on pattern number ' + str(c) + '/' + str(len(pp_ch[1])))
+        print('now on pattern number ' + str(c) + '/' + str(len(pp_ch[1])) + ' with ' + str(len(pp_ch[1][pat][1])) + ' elements')
         if inp == 'q': next
         good = []
-        for occurence in pp_ch[2][pat][1]:
+        for occurence in pp_ch[2][pat][1]: # [2].. ? actually doesnt make a diff
+        # for occurence in pp_ch[1][pat][1]:
             print(add_num(occurence))
             inp = input('enter order - div by "|" ')
-            if inp == 'q': break
+            # for some reason q and st do the same thing
+            if inp == 'q': break # stop asking about the current pattern
+            if inp == 's':
+                inp = ''
+                next 
+            if inp == 'st': # stop the current pattern selection here and count entries
+                inp = ''
+                break
             good.append(inp)
         checker = {x: 0 for x in good}
         # for i in {checker[x]: 0 for x in good}:
-        print(good)
+        # print(good)
         # for i in checker:
         for i in good:
             checker[i] += 1
-        print(checker)
+        # print(checker)
         wip = ''
         for i in checker:
             if checker[i] >= 2:
-                print('ayy ' + str(i) + ' appeared ' + str(checker[i]))
+                # print('ayy ' + str(i) + ' appeared ' + str(checker[i]))
                 # for cha in checker[i]:
                 for cha in i:
                     # won't work for pat lengths over 9
-                    if cha == '|': wip += ' | '
+                    if cha == '|': wip += '| '
                     else: wip += (pat.split(' ')[int(cha)] + ' ')
-        if wip != '': patterns.append(pat + ' -> ' + wip)
+        if wip != '': patterns.append(pat + '-> ' + wip)
+    #add an example with each element of patterns
     return patterns
        #i have 'NNP VBZ NN' and 21|0
        # pos.split(' ')

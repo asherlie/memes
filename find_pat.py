@@ -2,6 +2,17 @@ import os
 # import articles
 
 # the article data for this is prepared in write_pats_from_art in meme.hs
+def _enumerate(spl):
+    # spl = strn.split(' ')
+    occ = {x: 0 for x in spl}
+    for i in range(len(spl)):
+        if spl[i] in spl[i+1:]:
+            occ[spl[i]] += 1
+    for i in range(len(spl)-1, -1, -1): #iterate backwards
+        bef = spl[i]
+        spl[i] += ('_' + str(occ[spl[i]]))
+        occ[bef] -= 1
+    return spl
 def prep_data_chatter(fname):
     # def _enumerate(strn):
     def _enumerate(spl):
@@ -37,7 +48,9 @@ def prep_data_chatter(fname):
             c+=1
         oc+=1
         c = 0
-    return fin
+    return ret
+    # return fin # enumeration done in prep step invalidates patterns
+    # could always just return [fin, ret] and pp with fin, find pats with ret
             
 def find_p_chatter(prepped, consec_words=4):
     ret = {}
@@ -57,8 +70,18 @@ def find_p_chatter(prepped, consec_words=4):
                 ret[tmp_type][0] += 1
                 ret[tmp_type][1].append(tmp_str)
                 # ret[tmp_type][1] = tmp_str
-    return ret
-def pp_chat(pats, min_occ=1, rev=False, must_include = ['']):
+    updated = {}
+    tmp_str = ''
+    for i in ret:
+        for wrd in _enumerate(i.split(' ')):
+            tmp_str += wrd + ' '
+        updated[tmp_str[:-4]] = ret[i] # terrible workaround for the ' _0' that would show up
+        # don't plan on fixing tho
+        tmp_str = ''
+    # return ret
+    return updated
+
+def pp_chat(pats, min_occ=1, rev=False, must_include = [''], prnt=True):
     relevant = []
     relev = {}
     def has_items(strn, items):
@@ -69,7 +92,7 @@ def pp_chat(pats, min_occ=1, rev=False, must_include = ['']):
     c=0
     for i in pat_id_sorted:
         if pats[i][0] >= min_occ and has_items(i, must_include):
-            print(str(c) + ' : ' + i + ' : ' + str(pats[i][0]) + ' : ' + pats[i][1][0])
+            if prnt: print(str(c) + ' : ' + i + ' : ' + str(pats[i][0]) + ' : ' + pats[i][1][0])
             # relevant.append(pats[i][1])
             # relevant.append({i: 0})
             # relev[i] = 0
@@ -79,7 +102,8 @@ def pp_chat(pats, min_occ=1, rev=False, must_include = ['']):
     # for i in relevant:
         # relev[i[]
     # return [c, relevant, pats] #pats is also returned so this can act as a filter for create_pat_chat
-    return [c, relev, pats] #pats is also returned so this can act as a filter for create_pat_chat
+    # return [c, relev, pats] #pats is also returned so this can act as a filter for create_pat_chat
+    return [c, relev]
 
 def create_pat_chat(pp_ch):
     def add_num(strn):
@@ -102,8 +126,8 @@ def create_pat_chat(pp_ch):
         print('now on pattern number ' + str(c) + '/' + str(len(pp_ch[1])) + ' with ' + str(len(pp_ch[1][pat][1])) + ' elements')
         if inp == 'q': next
         good = []
-        for occurence in pp_ch[2][pat][1]: # [2].. ? actually doesnt make a diff
-        # for occurence in pp_ch[1][pat][1]:
+        # for occurence in pp_ch[2][pat][1]: # [2].. ? actually doesnt make a diff
+        for occurence in pp_ch[1][pat][1]:
             print(add_num(occurence))
             inp = input('enter order - div by "|" ')
             # for some reason q and st do the same thing

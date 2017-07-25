@@ -12,6 +12,10 @@ import NLP.POS
 import NLP.Types.Tree
 
 data MWord = Adj String | Noun String | Verb String | Place String | Num String | Unknown String | PNoun String | VUnknown String deriving (Show)
+
+{- below is for use with chatter lib -}
+data CH_mw = PRP  String | IN String | CD String | RB String | VBP String | VBN String | VBG String | VB String | JJ String | NNS String | NN String | NNP String | VBZ String | CH_unk String deriving (Show)
+
 {- VUnknown is verified unknown, meaning that it is not part of a multi-word POS - just realized it's only used within map_unknowns and is reclassified using word_to_MWord after - whatever. -}
 
 splitBy cha = foldr f [[]] 
@@ -160,7 +164,8 @@ write_pats_from_art(f_write, f_art) =
                   write_pats((map (\(x:y:xs) -> x)arts), f_write) {- don't need to convert to lowercase if not using NYTimes -}
                   {-write_pats((map (\(x:y:xs) -> upper x) arts), f_write)-}
 
-stm_e :: String -> IO [MWord]
+{-stm_e :: String -> IO [MWord]-}
+stm_e :: String -> IO [CH_mw]
 stm_e str =
       let
             contains :: (String, String) -> Bool
@@ -176,13 +181,16 @@ stm_e str =
                               x:y -> if (length (x:y)) < (length subs) then False else if f(s, (length subs)) == subs then True else contains(subs, y)
                               _   -> False
 
-            to_MW :: [[String]] -> [MWord]
+            {-to_MW :: [[String]] -> [MWord]-}
+            {- the [[String]] in the beginning is basically just [(String, String)] representing [POS, word] -}
+            to_MW :: [[String]] -> [CH_mw]
             to_MW(sll) =
                   case sll of
                         x:xs -> 
                               case x of
                                           {- other POS should be included in this one block of if then else's -}
-                                    f:s:[] -> if s == "NNP" then PNoun(f):to_MW(xs) else if contains("NN", s) then Noun(f):to_MW(xs) else if contains("VB", s) then Verb(f):to_MW(xs) else Unknown(f):to_MW(xs) {- should be the only case -}
+                                    {-f:s:[] -> if s == "NNP" then NNP(f):to_MW(xs) else if contains("NN", s) then Noun(f):to_MW(xs) else if contains("VB", s) then Verb(f):to_MW(xs) else Unknown(f):to_MW(xs) {- should be the only case -}-}
+                                    f:s:[] -> if s == "NNP" then NNP(f):to_MW(xs) else if s == "PRP" then PRP(f):to_MW(xs) else if s == "IN" then IN(f):to_MW(xs) else if s == "CD" then CD(f):to_MW(xs) else if s == "RB" then RB(f):to_MW(xs) else if s == "VBP" then VBP(f):to_MW(xs) else if s == "VBN" then VBN(f):to_MW(xs) else if s == "VBG" then VBG(f):to_MW(xs) else if s == "VB" then VB(f):to_MW(xs) else if s == "JJ" then JJ(f):to_MW(xs) else if s == "NNS" then NNS(f):to_MW(xs) else if s == "NN" then NN(f):to_MW(xs) else if s == "VBZ" then  VBZ(f):to_MW(xs) else CH_unk(f):to_MW(xs)
                         []   -> []
                   
       in
@@ -219,6 +227,12 @@ to_meme mw =
             Place(x):[] -> [(["bad luck brian"], [(x, x)])]
             x:xs -> to_meme(xs)
 
+to_meme_CH :: [CH_mw] -> [([String], [(String, String)])]
+to_meme_CH mw =
+      case mw of
+            [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")] )]
+            VBZ(x):xs -> [([""], [("","")])]
+            x:y -> to_meme_CH(y)
 pp_with_delim :: [([String], [(String, String)])] -> [IO ()]
 pp_with_delim m_lst =
       let
@@ -251,10 +265,17 @@ main =
             let senny = stm_e(head a)
             {-noIO <- (sequence senny)-}
             noIO <- (senny)
-            let unk = map_unknowns noIO
-            nOIO <- (sequence unk)
+
+            {- won't be many unknowns with chatter -}
+            {-
+             - let unk = map_unknowns noIO
+             - nOIO <- (sequence unk)
+             -}
             {-with_delims <- sequence(pp_with_delim(to_meme(noIO)))-}
+
             {-print(nOIO)-}
 
-            with_delims <- sequence(pp_with_delim(to_meme(nOIO)))
+            {-with_delims <- sequence(pp_with_delim(to_meme(nOIO)))-}
+            {-with_delims <- sequence(pp_with_delim(to_meme(noIO)))-}
+            with_delims <- sequence(pp_with_delim(to_meme_CH(noIO)))
             print(with_delims)

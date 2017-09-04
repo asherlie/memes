@@ -1,5 +1,5 @@
 import os
-# import articles
+import json
 
 # the article data for this is prepared in write_pats_from_art in meme.hs
 def _enumerate(spl):
@@ -13,7 +13,7 @@ def _enumerate(spl):
         spl[i] += ('_' + str(occ[spl[i]]))
         occ[bef] -= 1
     return spl
-def prep_data_chatter(fname):
+def prep_data_chatter(fname, line_f=True):
     # def _enumerate(strn):
     def _enumerate(spl):
         # spl = strn.split(' ')
@@ -27,16 +27,20 @@ def prep_data_chatter(fname):
             occ[bef] -= 1
         return spl
     ret = []
-    with open(fname, 'r') as f:
-        ff = f.readlines()
-    for i in ff:
-        tmp = i.strip('\n').split(' ')
-        tmp_el = []
-        # tmp_el = set()
-        for i in tmp:
-            tmp_el.append(i.split('/'))
-            # tmp_el.add(i.split('/'))
-        ret.append(tmp_el)
+    if line_f:
+        with open(fname, 'r') as f:
+            ff = f.readlines()
+        for i in ff:
+            tmp = i.strip('\n').split(' ')
+            tmp_el = []
+            # tmp_el = set()
+            for i in tmp:
+                tmp_el.append(i.split('/'))
+                # tmp_el.add(i.split('/'))
+            ret.append(tmp_el)
+    else:
+        with open(fname, 'r') as f:
+            ret = json.load(f)
     fin = []
     c=0
     oc=0

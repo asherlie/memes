@@ -2,6 +2,9 @@ import os
 import json
 
 # the article data for this is prepared in write_pats_from_art in meme.hs
+def generate_pattern_list(fname, consec_words=4, min_occ=1):
+    return create_pat_chat(pp_chat(find_p_chatter(prep_data_chatter(fname), consec_words), min_occ))
+
 def _enumerate(spl):
     # spl = strn.split(' ')
     occ = {x: 0 for x in spl}
@@ -44,7 +47,10 @@ def prep_data_chatter(fname, line_f=True):
     fin = []
     c=0
     oc=0
+    # iii = 0
     for article in ret:
+        # iii += 1
+        # print('on article ' + str(iii))
         tmp_art = []
         for word in _enumerate([x[1] for x in article]):
             tmp_art.append([ret[oc][c][0], word])

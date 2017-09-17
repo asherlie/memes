@@ -124,6 +124,7 @@ map_unknowns lst =
  -            {-lol this just retags. v unproductive-}
  -
  -}
+
 {-tags articles from file, writes tagged articles to another file in a format compatible with find_pat-}
 write_pats_from_art :: (FilePath, FilePath) -> IO [()]
 write_pats_from_art(f_write, f_art) =
@@ -173,41 +174,57 @@ write_pats_from_art(f_write, f_art) =
 
 {-stm_e :: String -> IO [MWord]-}
 {-stm_e :: (NLP.Types.Tag, String) -> IO [CH_mw]-}
-stm_e :: String -> IO [CH_mw]
-{-stm_e (tagger, str) =-}
-stm_e str =
+stm_l :: FilePath -> IO [IO [CH_mw]]
+stm_l f_art =
       let
-            contains :: (String, String) -> Bool
-            contains(subs, s) =
+            stm_e :: String -> IO [CH_mw]
+            stm_e str =
                   let
-                        f :: (String, Int) -> String
-                        f(str, x) =
-                             case str of
-                                    [] -> ""
-                                    o:r -> if x == 0 then "" else ([o] ++ (f(r, x-1)))
-                  in
-                        case s of
-                              x:y -> if (length (x:y)) < (length subs) then False else if f(s, (length subs)) == subs then True else contains(subs, y)
-                              _   -> False
+                        contains :: (String, String) -> Bool
+                        contains(subs, s) =
+                              let
+                                    f :: (String, Int) -> String
+                                    f(str, x) =
+                                         case str of
+                                                [] -> ""
+                                                o:r -> if x == 0 then "" else ([o] ++ (f(r, x-1)))
+                              in
+                                    case s of
+                                          x:y -> if (length (x:y)) < (length subs) then False else if f(s, (length subs)) == subs then True else contains(subs, y)
+                                          _   -> False
 
-            {-to_MW :: [[String]] -> [MWord]-}
-            {- the [[String]] in the beginning is basically just [(String, String)] representing [POS, word] -}
-            to_MW :: [[String]] -> [CH_mw]
-            to_MW(sll) =
-                  case sll of
-                        x:xs -> 
-                              case x of
-                                          {- other POS should be included in this one block of if then else's -}
-                                    {-f:s:[] -> if s == "NNP" then NNP(f):to_MW(xs) else if contains("NN", s) then Noun(f):to_MW(xs) else if contains("VB", s) then Verb(f):to_MW(xs) else Unknown(f):to_MW(xs) {- should be the only case -}-}
-                                    f:s:[] -> if s == "NNP" then NNP(f):to_MW(xs) else if s == "PRP" then PRP(f):to_MW(xs) else if s == "IN" then IN(f):to_MW(xs) else if s == "CD" then CD(f):to_MW(xs) else if s == "RB" then RB(f):to_MW(xs) else if s == "VBP" then VBP(f):to_MW(xs) else if s == "VBN" then VBN(f):to_MW(xs) else if s == "VBG" then VBG(f):to_MW(xs) else if s == "VB" then VB(f):to_MW(xs) else if s == "JJ" then JJ(f):to_MW(xs) else if s == "NNS" then NNS(f):to_MW(xs) else if s == "NN" then NN(f):to_MW(xs) else if s == "VBZ" then  VBZ(f):to_MW(xs) else CH_unk(f):to_MW(xs)
-                        []   -> []
-                  
+                        {-to_MW :: [[String]] -> [MWord]-}
+                        {- the [[String]] in the beginning is basically just [(String, String)] representing [POS, word] -}
+                        to_MW :: [[String]] -> [CH_mw]
+                        to_MW(sll) =
+                              case sll of
+                                    x:xs -> 
+                                          case x of
+                                                      {- other POS should be included in this one block of if then else's -}
+                                                {-f:s:[] -> if s == "NNP" then NNP(f):to_MW(xs) else if contains("NN", s) then Noun(f):to_MW(xs) else if contains("VB", s) then Verb(f):to_MW(xs) else Unknown(f):to_MW(xs) {- should be the only case -}-}
+                                                f:s:[] -> if s == "NNP" then NNP(f):to_MW(xs) else if s == "PRP" then PRP(f):to_MW(xs) else if s == "IN" then IN(f):to_MW(xs) else if s == "CD" then CD(f):to_MW(xs) else if s == "RB" then RB(f):to_MW(xs) else if s == "VBP" then VBP(f):to_MW(xs) else if s == "VBN" then VBN(f):to_MW(xs) else if s == "VBG" then VBG(f):to_MW(xs) else if s == "VB" then VB(f):to_MW(xs) else if s == "JJ" then JJ(f):to_MW(xs) else if s == "NNS" then NNS(f):to_MW(xs) else if s == "NN" then NN(f):to_MW(xs) else if s == "VBZ" then  VBZ(f):to_MW(xs) else CH_unk(f):to_MW(xs)
+                                                _ -> []
+                                    []   -> []
+                              
+                  in
+                        do
+                              {-tagger <- defaultTagger-}
+                              return $ (to_MW((map (\x -> splitBy '/' x)(splitBy ' ' (tagStr tagger str)))))
+                        {-shitty way to to do this - i can definitely figure out a way to use tag to expose original constructors-}
+                              {-return $ ((map (\x -> splitBy '/' x)(splitBy ' ' (tagStr tagger str)))))-}
+            load_json :: FilePath -> IO [[String]]
+            load_json str =
+                  do
+                        let get_it = B.readFile str
+                        jj <- get_it
+                        let decoded = decode jj :: Maybe [[String]]
+                        return $ ((\(Just(x)) -> x)decoded)
       in
             do
-                  {-tagger <- defaultTagger-}
-                  return $ (to_MW((map (\x -> splitBy '/' x)(splitBy ' ' (tagStr tagger str)))))
-            {-shitty way to to do this - i can definitely figure out a way to use tag to expose original constructors-}
-                  {-return $ ((map (\x -> splitBy '/' x)(splitBy ' ' (tagStr tagger str)))))-}
+                  arts <- load_json f_art
+                  {-return $ map stm_e ((\(x:y:xs) -> x)arts)-}
+                  return $ map stm_e (map (\(x:y) -> x) arts)
+                  {-return $ map stm_e arts-}
 sentence_to_mapped :: String -> [IO MWord]
 sentence_to_mapped str =
       let

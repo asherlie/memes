@@ -1,3 +1,5 @@
+import System.IO.Unsafe
+
 import System.IO  
 import System.IO.Strict
 
@@ -9,7 +11,8 @@ import Data.List
 import qualified Data.ByteString.Lazy as B
 import Data.Aeson
 import NLP.POS
-import NLP.Types.Tree
+{-import NLP.Types.Tree-}
+import NLP.Types
 
 data MWord = Adj String | Noun String | Verb String | Place String | Num String | Unknown String | PNoun String | VUnknown String deriving (Show)
 
@@ -39,6 +42,9 @@ is_dig str =
       case str of
             []  -> True
             x:y -> if (not ((Data.Char.isDigit x) || (x == '.') )) then False else is_dig(y)
+
+{-using this for now to increase speed significantly-}
+tagger = unsafePerformIO defaultTagger
 
 {- maps word to its part of speech -} 
 word_to_MWord :: String -> IO MWord
@@ -118,6 +124,7 @@ map_unknowns lst =
  -            {-lol this just retags. v unproductive-}
  -
  -}
+{-tags articles from file, writes tagged articles to another file in a format compatible with find_pat-}
 write_pats_from_art :: (FilePath, FilePath) -> IO [()]
 write_pats_from_art(f_write, f_art) =
       let
@@ -136,7 +143,7 @@ write_pats_from_art(f_write, f_art) =
                         write_pat :: String -> IO ()
                         write_pat str =
                               do
-                                    tagger <- defaultTagger
+                                    {-tagger <- defaultTagger-}
                                     let tagged = tagStr tagger str
                                     appendFile y (tagged ++ "\n")
                   in
@@ -165,7 +172,9 @@ write_pats_from_art(f_write, f_art) =
                   {-write_pats((map (\(x:y:xs) -> upper x) arts), f_write)-}
 
 {-stm_e :: String -> IO [MWord]-}
+{-stm_e :: (NLP.Types.Tag, String) -> IO [CH_mw]-}
 stm_e :: String -> IO [CH_mw]
+{-stm_e (tagger, str) =-}
 stm_e str =
       let
             contains :: (String, String) -> Bool
@@ -195,7 +204,7 @@ stm_e str =
                   
       in
             do
-                  tagger <- defaultTagger
+                  {-tagger <- defaultTagger-}
                   return $ (to_MW((map (\x -> splitBy '/' x)(splitBy ' ' (tagStr tagger str)))))
             {-shitty way to to do this - i can definitely figure out a way to use tag to expose original constructors-}
                   {-return $ ((map (\x -> splitBy '/' x)(splitBy ' ' (tagStr tagger str)))))-}
@@ -257,25 +266,23 @@ pp_with_delim m_lst =
       in
             map p_one m_lst
             
-main =
-      do
-            {-TODO: incorporate map_unknown into sentence_to_mapped to make this less gross-}
-            a <- getArgs
-            {-let senny = sentence_to_mapped(head a)-}
-            let senny = stm_e(head a)
-            {-noIO <- (sequence senny)-}
-            noIO <- (senny)
+{-main =-}
+      {-do-}
+            {-{-TODO: incorporate map_unknown into sentence_to_mapped to make this less gross-}-}
+            {-a <- getArgs-}
+            {-{-let senny = sentence_to_mapped(head a)-}-}
+            {-let senny = stm_e(head a)-}
+            {-{-noIO <- (sequence senny)-}-}
+            {-noIO <- (senny)-}
 
-            {- won't be many unknowns with chatter -}
-            {-
-             - let unk = map_unknowns noIO
-             - nOIO <- (sequence unk)
-             -}
-            {-with_delims <- sequence(pp_with_delim(to_meme(noIO)))-}
+            {-{- won't be many unknowns with chatter -}-}
+            {-let unk = map_unknowns noIO-}
+            {-nOIO <- (sequence unk)-}
+            {-{-with_delims <- sequence(pp_with_delim(to_meme(noIO)))-}-}
 
-            {-print(nOIO)-}
+            {-{-print(nOIO)-}-}
 
-            {-with_delims <- sequence(pp_with_delim(to_meme(nOIO)))-}
-            {-with_delims <- sequence(pp_with_delim(to_meme(noIO)))-}
-            with_delims <- sequence(pp_with_delim(to_meme_CH(noIO)))
-            print(with_delims)
+            {-{-with_delims <- sequence(pp_with_delim(to_meme(nOIO)))-}-}
+            {-{-with_delims <- sequence(pp_with_delim(to_meme(noIO)))-}-}
+            {-with_delims <- sequence(pp_with_delim(to_meme_CH(noIO)))-}
+            {-print(with_delims)-}

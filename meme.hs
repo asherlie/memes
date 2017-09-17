@@ -259,8 +259,8 @@ to_meme_CH mw =
             [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")] )]
             VBZ(x):xs -> [([""], [("","")])]
             x:y -> to_meme_CH(y)
-pp_with_delim :: [([String], [(String, String)])] -> [IO ()]
-pp_with_delim m_lst =
+add_delims :: [([String], [(String, String)])] -> [String]
+add_delims m_lst =
       let
             {-
              -delim guide:
@@ -270,8 +270,9 @@ pp_with_delim m_lst =
              -      @@ :: separates positive (top, bottom) tuple from negative
              -      && :: separates two equally plausible meme options to be chosen at random
              -}
-            p_one :: ([String], [(String, String)]) -> IO ()
-            p_one (x, y) =
+
+            delim_one :: ([String], [(String, String)]) -> String
+            delim_one (x, y) =
                   let
                         xp = if length x == 2 then (\(x:y:xs) -> x ++ "|" ++ y) x else head x {- separates pos from neg option in meme type -}
                         top_bot y =
@@ -279,9 +280,9 @@ pp_with_delim m_lst =
                                     [(i, j), (q, z)] -> i ++ "#%" ++ j ++ "@@" ++ q ++ "#%" ++ z ++ "&&"
                                     [(i, j)]         -> i ++ "#%" ++ j ++ "&&"
                   in
-                        putStr(xp ++ "^^" ++ (top_bot y))
+                        xp ++ "^^" ++ (top_bot y)
       in
-            map p_one m_lst
+            map delim_one m_lst
             
 {-main =-}
       {-do-}

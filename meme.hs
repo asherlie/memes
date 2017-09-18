@@ -257,9 +257,9 @@ to_meme_CH :: [CH_mw] -> [([String], [(String, String)])]
 to_meme_CH mw =
       case mw of
             [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")] )]
-            VBZ(x):xs -> [([""], [("","")])]
+            VBZ(x):xs -> [([""], [("","")]), ([""], [("", "")])]
             x:y -> to_meme_CH(y)
-add_delims :: [([String], [(String, String)])] -> [String]
+add_delims :: [([String], [(String, String)])] -> String
 add_delims m_lst =
       let
             {-
@@ -269,6 +269,7 @@ add_delims m_lst =
              -      #% :: separates top text from bottom text
              -      @@ :: separates positive (top, bottom) tuple from negative
              -      && :: separates two equally plausible meme options to be chosen at random
+             -      [] :: separates 
              -}
 
             delim_one :: ([String], [(String, String)]) -> String
@@ -281,9 +282,35 @@ add_delims m_lst =
                                     [(i, j)]         -> i ++ "#%" ++ j ++ "&&"
                   in
                         xp ++ "^^" ++ (top_bot y)
+            add_brackets :: [String] -> String            
+            add_brackets sl =
+                  case sl of
+                        x:y:xs -> "[\"" ++ x ++ "\",\"" ++ y ++ "\"]"++add_brackets(xs)
+                        _ -> ""
       in
-            map delim_one m_lst
+            add_brackets(map delim_one m_lst)
             
+{-write_delim_memes_to_file :: (FilePath, FilePath) -> IO ()-}
+write_delim_memes_to_file(f_art, f_write) = 
+      let
+            write_pats :: ([String], FilePath) -> IO [()]
+            write_pats(x, y) =
+                  let
+                        write_pat :: String -> IO ()
+                        write_pat str =
+                              do
+                                    appendFile y (str++ "\n")
+                  in
+                        do
+                              sequence (map write_pat x)
+      in
+            do
+                  artIOIO <- stm_l f_art
+                  let artIO = sequence artIOIO
+                  art <- artIO
+                  let memes = map add_delims (map to_meme_CH art)
+                  return memes
+
 {-main =-}
       {-do-}
             {-{-TODO: incorporate map_unknown into sentence_to_mapped to make this less gross-}-}

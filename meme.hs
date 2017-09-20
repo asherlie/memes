@@ -18,6 +18,8 @@ data MWord = Adj String | Noun String | Verb String | Place String | Num String 
 
 {- below is for use with chatter lib -}
 data CH_mw = PRP  String | IN String | CD String | RB String | VBP String | VBN String | VBG String | VB String | JJ String | NNS String | NN String | NNP String | VBZ String | CH_unk String deriving (Show)
+{- used for any type taken, if usign this stm_l should make everything an A() -}
+data ANY = A CH_mw
 
 {- VUnknown is verified unknown, meaning that it is not part of a multi-word POS - just realized it's only used within map_unknowns and is reclassified using word_to_MWord after - whatever. -}
 
@@ -200,10 +202,8 @@ stm_l f_art =
                               case sll of
                                     x:xs -> 
                                           case x of
-                                                      {- other POS should be included in this one block of if then else's -}
-                                                {-f:s:[] -> if s == "NNP" then NNP(f):to_MW(xs) else if contains("NN", s) then Noun(f):to_MW(xs) else if contains("VB", s) then Verb(f):to_MW(xs) else Unknown(f):to_MW(xs) {- should be the only case -}-}
                                                 f:s:[] -> if s == "NNP" then NNP(f):to_MW(xs) else if s == "PRP" then PRP(f):to_MW(xs) else if s == "IN" then IN(f):to_MW(xs) else if s == "CD" then CD(f):to_MW(xs) else if s == "RB" then RB(f):to_MW(xs) else if s == "VBP" then VBP(f):to_MW(xs) else if s == "VBN" then VBN(f):to_MW(xs) else if s == "VBG" then VBG(f):to_MW(xs) else if s == "VB" then VB(f):to_MW(xs) else if s == "JJ" then JJ(f):to_MW(xs) else if s == "NNS" then NNS(f):to_MW(xs) else if s == "NN" then NN(f):to_MW(xs) else if s == "VBZ" then  VBZ(f):to_MW(xs) else CH_unk(f):to_MW(xs)
-                                                _ -> []
+                                                _      -> []
                                     []   -> []
                               
                   in
@@ -256,9 +256,10 @@ to_meme mw =
 to_meme_CH :: [CH_mw] -> [([String], [(String, String)])]
 to_meme_CH mw =
       case mw of
+            NNP(x):VBZ(y):NNP(z):xs -> [(["success kid", "bad luck brian"], [(x ++ " " ++ y, z)])]
             [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")] )]
             {-VBZ(x):xs -> [([""], [("","")]), ([""], [("", "")])]-}
-            x:y -> to_meme_CH(y)
+            x:xs -> to_meme_CH(xs)
 add_delims :: [([String], [(String, String)])] -> String
 add_delims m_lst =
       let
@@ -290,6 +291,7 @@ add_delims m_lst =
                         x:[]   -> "[\"" ++ x ++ "\"]"
                         _ -> ""
       in
+            {- TODO: deal with length m_lst != 1 -}
             add_brackets(map delim_one m_lst)
             
 write_delim_memes_to_file :: (FilePath, FilePath) -> IO [IO ()]
@@ -327,3 +329,9 @@ write_delim_memes_to_file(f_art, f_write) =
             {-{-with_delims <- sequence(pp_with_delim(to_meme(noIO)))-}-}
             {-with_delims <- sequence(pp_with_delim(to_meme_CH(noIO)))-}
             {-print(with_delims)-}
+main =
+      do
+            a <- getArgs
+            putStr (head (tail a))
+            writeIO <- write_delim_memes_to_file(head a, head(tail a))
+            sequence writeIO

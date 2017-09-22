@@ -104,6 +104,22 @@ class Meme:
                 memes.append(self.parse(i))
             return memes
 
+        def gen_meme_from_m(self, mm, art):
+            mtu = mm[random.randrange(0, len(mm))]
+            m_type = mtu[0][0]
+            # type
+            if len(mtu[0]) == 2:
+                if self.sent_pos(art):
+                    m_type = mtu[0][0]
+                else:
+                    m_type = mtu[0][1]
+            print(m_type)    
+            return self.gen_meme(self.meme_to_id(m_type), mtu[1][0], mtu[1][1])
+
+        def sent_pos(self, strng):
+                sent = requests.post('http://text-processing.com/api/sentiment/', 'text=' + strng).json()
+                return sent['probability']['pos'] > sent['probability']['neg']
+
                 
         def spit(self, strng):
                 a = os.popen('./meme "' + strng + '"').read().encode('ascii', 'ignore').decode().strip('&&[()]\n')

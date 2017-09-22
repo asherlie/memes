@@ -256,8 +256,8 @@ to_meme mw =
 to_meme_CH :: [CH_mw] -> [([String], [(String, String)])]
 to_meme_CH mw =
       case mw of
-            NNP(x):VBZ(y):NNP(z):xs -> [(["success kid", "bad luck brian"], [(x ++ " " ++ y, z)])]
-            [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")] )]
+            NNP(x):VBZ(y):NNP(z):xs -> [(["success kid", "bad luck brian"], [(x ++ " " ++ y, z)]),(["success kid", "bad luck brian"], [(x ++ " " ++ y, z)])]
+            [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")])]
             {-VBZ(x):xs -> [([""], [("","")]), ([""], [("", "")])]-}
             x:xs -> to_meme_CH(xs)
 add_delims :: [([String], [(String, String)])] -> String
@@ -279,10 +279,16 @@ add_delims m_lst =
                         xp = if length x == 2 then (\(x:y:xs) -> x ++ "|" ++ y) x else head x {- separates pos from neg option in meme type -}
                         top_bot y =
                               case y of
-                                    [(i, j), (q, z)] -> i ++ "#%" ++ j ++ "@@" ++ q ++ "#%" ++ z ++ "&&"
-                                    [(i, j)]         -> i ++ "#%" ++ j ++ "&&"
+                                    {-TODO:
+                                     -i handle &&'s very very poorly right now
+                                     -i need another function altogether to add &&, if length of whole input > 1
+                                     -throw in some &&'s - should be: add_amper(map delim_one m_lst)
+                                     -}
+                                    [(i, j), (q, z)] -> i ++ "#%" ++ j ++ "@@" ++ q ++ "#%" ++ z {- ++ "&&" -}
+                                    [(i, j)]         -> i ++ "#%" ++ j {- ++ "&&" -}
                   in
                         xp ++ "^^" ++ (top_bot y)
+            {-don't need this - && from before will work but i cant add bracks-}
             add_brackets :: [String] -> String            
             add_brackets sl =
                   case sl of
@@ -290,9 +296,19 @@ add_delims m_lst =
                         x:y:[] -> "[\"" ++ x ++ "\",\"" ++ y ++ "\"]"
                         x:[]   -> "[\"" ++ x ++ "\"]"
                         _ -> ""
+            {-
+             -add_amper sl =
+             -      case sl of
+             -            x:y:xs -> delim_
+             -            []     -> ""
+             -}
       in
             {- TODO: deal with length m_lst != 1 -}
-            add_brackets(map delim_one m_lst)
+            case (map delim_one m_lst) of
+                  x:y:[] -> x ++ "&&" ++ y
+                  x:[]   -> x
+            {-(\(x:y:[]) -> x ++ y)(map delim_one m_lst)-}
+            {-add_brackets(map delim_one m_lst)-}
             
 write_delim_memes_to_file :: (FilePath, FilePath) -> IO [IO ()]
 write_delim_memes_to_file(f_art, f_write) = 

@@ -42,6 +42,7 @@ class Meme:
                 # [type, content]
                 t_c = ops[i].split('^^')
                 tmp_meme[0] = t_c[0].split('|')
+                # print(t_c)
                 tmp_meme[1] = tuple(t_c[1].split('#%'))
                 ret.append(tuple(tmp_meme))
             return ret
@@ -94,10 +95,15 @@ class Meme:
                 return (m_type, (top_text, bot_text))
             
 
-        def memes_from_f(delim_file):
+        def memes_from_f(self, delim_file):
             with open(delim_file, 'r') as f:
                 fi = f.read()
-            memes = fi.split('\n')
+            f_memes = fi.split('\n')[:-1]
+            memes = []
+            for i in f_memes:
+                memes.append(self.parse(i))
+            return memes
+
                 
         def spit(self, strng):
                 a = os.popen('./meme "' + strng + '"').read().encode('ascii', 'ignore').decode().strip('&&[()]\n')

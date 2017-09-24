@@ -111,18 +111,35 @@ stm_l f_art =
  -            Noun(x):Verb(y):Noun(z):xs -> [(["The Most Interesting Man In The World"], [( ("i don't always " ++ y), ("but when i do, it's " ++ z))])]
  -}
 
-to_s :: CH_mw -> String
-to_s inp = 
-      case inp of
-            NNP(x) -> x
-            _      -> ""
+
 to_meme_CH :: [CH_mw] -> [([String], [(String, String)])]
 to_meme_CH mw =
-      case mw of
-            NNP(x):VBZ(y):NNP(z):xs -> [(["success kid", "bad luck brian"], [(x ++ " " ++ y, z)]),(["success kid", "bad luck brian"], [(x ++ " " ++ y, z)])]
-            [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")])]
-            {-VBZ(x):xs -> [([""], [("","")]), ([""], [("", "")])]-}
-            x:xs -> to_meme_CH(xs)
+      let
+            {-meant to be used to deconstruct unspecified CH_mw -}
+            to_s :: CH_mw -> String
+            to_s inp = 
+                  case inp of
+                        NNP(x)    -> x
+                        PRP(x)    -> x
+                        IN(x)     -> x
+                        CD(x)     -> x
+                        RB(x)     -> x
+                        VBP(x)    -> x
+                        VBN(x)    -> x
+                        VBG(x)    -> x
+                        VB(x)     -> x
+                        JJ(x)     -> x
+                        NNS(x)    -> x
+                        NN(x)     -> x
+                        VBZ(x)    -> x
+                        CH_unk(x) -> x
+      in
+            case mw of
+                  NNP(x):VBZ(y):NNP(z):xs -> [(["success kid", "bad luck brian"], [(x ++ " " ++ y, z)]),(["success kid", "bad luck brian"], [(x ++ " " ++ y, z)])]
+                  NNP(x):y:xs                  -> [(["scumbag steve"], [(to_s y, "")])]
+                  [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")])]
+                  {-VBZ(x):xs -> [([""], [("","")]), ([""], [("", "")])]-}
+                  x:xs -> to_meme_CH(xs)
 add_delims :: [([String], [(String, String)])] -> String
 add_delims m_lst =
       let

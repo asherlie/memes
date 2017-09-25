@@ -17,6 +17,10 @@ def _enumerate(spl):
         occ[bef] -= 1
     return spl
 def prep_data_chatter(fname, line_f=True):
+    def remove_tr(strn):
+        if strn == '' or strn[len(strn)-1] != ' ':
+            return strn
+        return remove_tr(strn[:-1])
     # def _enumerate(strn):
     def _enumerate(spl):
         # spl = strn.split(' ')
@@ -37,7 +41,13 @@ def prep_data_chatter(fname, line_f=True):
             tmp = i.strip('\n').split(' ')
             tmp_el = []
             # tmp_el = set()
+            # tm_s = []
             for i in tmp:
+                # tm_s = i.split('/')
+                # if len(tm_s) != 2:
+                    # print(tm_s)
+                # tmp_el.append([remove_tr(tm_s[0]), tm_s[1]])
+                # tmp_el.append(remove_tr(i).split('/'))
                 tmp_el.append(i.split('/'))
                 # tmp_el.add(i.split('/'))
             ret.append(tmp_el)
@@ -52,7 +62,9 @@ def prep_data_chatter(fname, line_f=True):
         # iii += 1
         # print('on article ' + str(iii))
         tmp_art = []
-        for word in _enumerate([x[1] for x in article]):
+        # for sd in article:
+            # print(sd)
+        for word in _enumerate([x[1] for x in article[:-1]]):
             tmp_art.append([ret[oc][c][0], word])
             fin.append(tmp_art)
             c+=1
@@ -134,6 +146,7 @@ def create_pat_chat(pp_ch):
         c+=1
         # print('now on pattern number ' + str(c) + '/' + str(len(pp_ch[2])))
         print('now on pattern number ' + str(c) + '/' + str(len(pp_ch[1])) + ' with ' + str(len(pp_ch[1][pat][1])) + ' elements')
+        # why does the above print number of elements to be min_occ?
         if inp == 'q': next
         good = []
         # for occurence in pp_ch[2][pat][1]: # [2].. ? actually doesnt make a diff

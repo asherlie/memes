@@ -57,7 +57,10 @@ def get_articles_guardian(n=50):
                     tmp_title += ltr
                 else:
                     tmp_title += ' '
-            arts.append([tmp_title, art['webUrl']])
+            if tmp_title[len(tmp_title)] == ' ':
+                arts.append([tmp_title[:-1], art['webUrl']])
+            else
+                arts.append([tmp_title, art['webUrl']])
             if len(arts) == n: return arts
         print(str(len(arts)) + ' added so far')
     return arts

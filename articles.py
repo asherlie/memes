@@ -51,7 +51,13 @@ def get_articles_guardian(n=50):
         params = {'api-key': '____________________________________', 'page-size': 50, 'page': i}
         ret = requests.get(base, params).json()['response']['results']
         for art in ret:
-            arts.append([art['webTitle'], art['webUrl']])
+            tmp_title = ''
+            for ltr in art['webTitle']:
+                if ord(ltr) <= 128:
+                    tmp_title += ltr
+                else:
+                    tmp_title += ' '
+            arts.append([tmp_title, art['webUrl']])
             if len(arts) == n: return arts
         print(str(len(arts)) + ' added so far')
     return arts

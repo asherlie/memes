@@ -125,7 +125,7 @@ def pp_chat(pats, min_occ=1, rev=False, must_include = [''], prnt=True):
         # relev[i[]
     # return [c, relevant, pats] #pats is also returned so this can act as a filter for create_pat_chat
     # return [c, relev, pats] #pats is also returned so this can act as a filter for create_pat_chat
-    return [c, relev]
+    return [c, relev, [relev[x] for x in relev]]
 
 def create_pat_chat(pp_ch):
     def add_num(strn):
@@ -184,63 +184,3 @@ def create_pat_chat(pp_ch):
        #i have 'NNP VBZ NN' and 21|0
        # pos.split(' ')
 
-def ppl(lst):
-    strn = ''
-    for i in range(len(lst)):
-        if i != 0:
-            strn += ', '
-        strn += lst[i]
-    return strn
-def pp(pats, mini=1, allow_unknowns=True):
-    for i in pats:
-        if pats[i][0] >= mini:
-            temp_str = (i + ' : ' + str(pats[i][0]) + ' : ' + ppl(pats[i][1]))
-            if allow_unknowns:
-                print(temp_str)
-            else:
-                if temp_str.find('Unknown') == -1:
-                    print(temp_str)
-def st_quot(strng):
-    return strng[1:-1]
-
-def tag(st):
-    b = os.popen('./meme_pos "' + st + '"').read().strip('\n').strip('[').strip(']')[0:-1]
-    ret = b.split('"')
-    rr={}
-    for i in range(0, len(ret), 2):
-        rr[ret[i].strip(' ')] = ret[i+1].strip(' ')
-    return rr
-
-def m_pos(art):
-    num = len(art)
-    c = 0
-    articles = []
-    for i in art:
-        articles.append(os.popen('./meme_pos "' + i[0] + '"').read().encode('ascii', 'ignore').decode().strip('\n').strip('[').strip(']').strip(',').split('"')[0:-1])
-        c+=1
-        print('done tagging ' + str(c) + '/' + str(num))
-    return articles
-def find_p(num, unique=True):
-    # m = meme.Meme()
-    # a = articles.get_articles(num)
-    print('articles scraped succesfully')
-    
-    lst = {}
-    # for art_pos in m_pos(a):
-    for art_pos in num:
-        for i in range(0, len(art_pos)-6, 2):
-            lst[art_pos[i] + art_pos[i+2] + art_pos[i+4] + art_pos[i+6]] = [0, []]
-        for i in range(0, len(art_pos)-6, 2):
-            tmp_type = (art_pos[i] + art_pos[i+2] + art_pos[i+4] + art_pos[i+6])
-            tmp_sent = (art_pos[i+1] + ' ' + art_pos[i+3] + ' ' + art_pos[i+5] + ' ' + art_pos[i+7])
-            if unique:
-                if tmp_sent not in lst[tmp_type]:
-                    lst[tmp_type][0] += 1
-                    lst[tmp_type][1].append(tmp_sent)
-                    
-            else:
-                lst[tmp_type][0] += 1
-                lst[tmp_type][1].append(tmp_sent)
-
-    return lst
-            # word = wrd.strip(',').strip(' ') #shouldnt be here lol - want to have separate loop to convert before i go into the pattern finding loop

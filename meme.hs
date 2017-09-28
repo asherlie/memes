@@ -1,5 +1,3 @@
-import System.IO.Unsafe
-
 import System.IO  
 import System.IO.Strict
 
@@ -21,11 +19,6 @@ data ANY = A CH_mw
 splitBy cha = foldr f [[]] 
             where f c l@(x:xs) | c == cha = []:l
                              | otherwise = (c:x):xs
-
-
-{-using this for now to increase speed significantly-}
-tagger = unsafePerformIO defaultTagger
-
 
 {-
  - {-the point of this is to expose the constructors behind tag to maek pattern matching easier once this all compiles -}
@@ -58,8 +51,9 @@ load_json str =
 write_pats_from_art :: (FilePath, FilePath) -> IO [()]
 write_pats_from_art(f_write, f_art) =
       let
-            write_pats :: ([String], FilePath) -> IO [()]
-            write_pats(x, y) =
+            {-write_pats :: (POSTagger, [String], FilePath) -> IO [()]-}
+            write_pats :: Tag t => (POSTagger t, [String], FilePath) -> IO [()]
+            write_pats(tagger, x, y) =
                   let
                         write_pat :: String -> IO ()
                         write_pat str =
@@ -72,14 +66,15 @@ write_pats_from_art(f_write, f_art) =
                               sequence (map write_pat x)
       in
             do
+                  tagger <- defaultTagger
                   arts <- load_json f_art
-                  write_pats((map (\(x:y:xs) -> x)arts), f_write)
+                  write_pats(tagger, (map (\(x:y:xs) -> x)arts), f_write)
 
 stm_l :: FilePath -> IO [IO [CH_mw]]
 stm_l f_art =
       let
-            stm_e :: String -> IO [CH_mw]
-            stm_e str =
+             stm_e :: Tag t => POSTagger t -> String -> IO [CH_mw]
+             stm_e tagger str =
                   let
                         {- the [[String]] in the beginning is basically just [(String, String)] representing [POS, word] -}
                         {-shitty way to to do this - i can definitely figure out a way to use tag to expose original constructors-}
@@ -97,8 +92,9 @@ stm_l f_art =
                               return $ (to_MW((map (\x -> splitBy '/' x)(splitBy ' ' (tagStr tagger str)))))
       in
             do
+                  tagger <- defaultTagger
                   arts <- load_json f_art
-                  return $ map stm_e (map (\(x:y) -> x) arts)
+                  return $ map (stm_e tagger) (map (\(x:y) -> x) arts)
                   {- (positive option, negative option), top_text, bottom_text -} 
 {-
  -                the vestiges of the non chatter - keeping around to possibly adapt to chatter:
@@ -135,9 +131,12 @@ to_meme_CH mw =
                         CH_unk(x) -> x
       in
             case mw of
+                  JJ(x):NNP(y):VBZ(z):xs  -> [(["the most interesting man in the world"], [("i don't always " ++ z, "but when i do, i'm " ++ x)])]
                   NNP(x):VBZ(y):NNP(z):xs -> [(["success kid", "bad luck brian"], [(x ++ " " ++ y, z)]),(["success kid", "bad luck brian"], [(x ++ " " ++ y, z)])]
-                  NNP(x):y:xs                  -> [(["scumbag steve"], [(to_s y, "")])]
+                  JJ(x):y:xs                  -> [(["bad luck brian", "scumbag steve"], [(x, to_s y)])]
                   [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")])]
+                  {-l2 f3-}
+                  NN(x):IN(y):NN(z):IN(a):NNP(b):xs -> [(["bad luck brian", "scumbag steve"], [(a ++ " " ++ b, x ++ " " ++ y ++ " " ++ z)])]
                   {-VBZ(x):xs -> [([""], [("","")]), ([""], [("", "")])]-}
                   x:xs -> to_meme_CH(xs)
 add_delims :: [([String], [(String, String)])] -> String
@@ -189,6 +188,17 @@ write_delim_memes_to_file(f_art, f_write) =
                   {-return memes-}
                   return $ write_to_file(memes, f_write)
 
+{-both main methods take in file to read, file to write-}
+{-article pat-}
+{-
+ -main =
+ -      do
+ -            
+ -            a <- getArgs
+ -            write_pats_from_art(head (tail a), head a)
+ -}
+
+{-article to delim meme-}
 main =
       do
             a <- getArgs

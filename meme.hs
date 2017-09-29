@@ -1,42 +1,16 @@
 import System.IO  
-import System.IO.Strict
 
 import System.Environment
-import Data.Char
 import Data.List
-{-import Data.Text-}
+import Data.Text
 
 import qualified Data.ByteString.Lazy as B
 import Data.Aeson
 import NLP.POS
-{-import NLP.Types.Tree-}
+import NLP.Corpora.Conll
 import NLP.Types
 
-data CH_mw = PRP  String | IN String | CD String | RB String | VBP String | VBN String | VBG String | VB String | JJ String | NNS String | NN String | NNP String | VBZ String | CH_unk String deriving (Show)
-{- used for any type taken, if usign this stm_l should make everything an A() -}
-data ANY = A CH_mw
 
-splitBy cha = foldr f [[]] 
-            where f c l@(x:xs) | c == cha = []:l
-                             | otherwise = (c:x):xs
-
-{-
- - {-the point of this is to expose the constructors behind tag to maek pattern matching easier once this all compiles -}
- -tag_str :: String -> taggedSentence
- -tag_str str =
- -      let
- -            sent_to_lst :: Sentence -> [String]
- -            {-sent_to_lst :: (Sentence, [NLP.Corpora.Conll.Tag]) -> -}
- -            sent_to_lst sent = Prelude.map (\(Token(x)) -> x) ((\(Sent(i)) -> i)((\(x,y)->x)unz))
- -      in
- -            do
- -                  tagger <- defaultTagger
- -                  let tagged = unzipTags (tag tagger (pack str))
- -
- -            {-applyTags tagged ((\(x,y) -> y)tagged) ((\(x,y) -> x)tagged) -}
- -            {-lol this just retags. v unproductive-}
- -
- -}
 load_json :: FilePath -> IO [[String]]
 load_json str =
       do
@@ -51,94 +25,56 @@ load_json str =
 write_pats_from_art :: (FilePath, FilePath) -> IO [()]
 write_pats_from_art(f_write, f_art) =
       let
-            {-write_pats :: (POSTagger, [String], FilePath) -> IO [()]-}
-            write_pats :: Tag t => (POSTagger t, [String], FilePath) -> IO [()]
+            write_pats :: NLP.Types.Tag t => (POSTagger t, [String], FilePath) -> IO [()]
             write_pats(tagger, x, y) =
                   let
                         write_pat :: String -> IO ()
                         write_pat str =
                               do
-                                    {-tagger <- defaultTagger-}
+                                    tagger <- defaultTagger
                                     let tagged = tagStr tagger str
                                     appendFile y (tagged ++ "\n")
                   in
                         do
-                              sequence (map write_pat x)
+                              sequence (Data.List.map write_pat x)
       in
             do
                   tagger <- defaultTagger
                   arts <- load_json f_art
-                  write_pats(tagger, (map (\(x:y:xs) -> x)arts), f_write)
+                  write_pats(tagger, (Data.List.map (\(x:y:xs) -> x)arts), f_write)
 
-stm_l :: FilePath -> IO [IO [CH_mw]]
-stm_l f_art =
+
+stm_ch :: FilePath -> IO [TaggedSentence NLP.Corpora.Conll.Tag]
+stm_ch f_art =
+      do
+            tagger <- defaultTagger
+            arts <- load_json f_art
+            return $ Data.List.map Data.List.head (Data.List.map (tag tagger) (Data.List.map pack (Data.List.map Data.List.head arts)))
+
+to_meme_ch_cons :: TaggedSentence NLP.Corpora.Conll.Tag -> [([String], [(String, String)])]
+to_meme_ch_cons ts =
       let
-             stm_e :: Tag t => POSTagger t -> String -> IO [CH_mw]
-             stm_e tagger str =
-                  let
-                        {- the [[String]] in the beginning is basically just [(String, String)] representing [POS, word] -}
-                        {-shitty way to to do this - i can definitely figure out a way to use tag to expose original constructors-}
-                        to_MW :: [[String]] -> [CH_mw]
-                        to_MW(sll) =
-                              case sll of
-                                    x:xs -> 
-                                          case x of
-                                                f:s:[] -> if s == "NNP" then NNP(f):to_MW(xs) else if s == "PRP" then PRP(f):to_MW(xs) else if s == "IN" then IN(f):to_MW(xs) else if s == "CD" then CD(f):to_MW(xs) else if s == "RB" then RB(f):to_MW(xs) else if s == "VBP" then VBP(f):to_MW(xs) else if s == "VBN" then VBN(f):to_MW(xs) else if s == "VBG" then VBG(f):to_MW(xs) else if s == "VB" then VB(f):to_MW(xs) else if s == "JJ" then JJ(f):to_MW(xs) else if s == "NNS" then NNS(f):to_MW(xs) else if s == "NN" then NN(f):to_MW(xs) else if s == "VBZ" then  VBZ(f):to_MW(xs) else CH_unk(f):to_MW(xs)
-                                                _      -> []
-                                    []   -> []
-                              
-                  in
-                        do
-                              return $ (to_MW((map (\x -> splitBy '/' x)(splitBy ' ' (tagStr tagger str)))))
-      in
-            do
-                  tagger <- defaultTagger
-                  arts <- load_json f_art
-                  return $ map (stm_e tagger) (map (\(x:y) -> x) arts)
-                  {- (positive option, negative option), top_text, bottom_text -} 
-{-
- -                the vestiges of the non chatter - keeping around to possibly adapt to chatter:
- -
- -            [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")] )]
- -            Adj(x):Noun(y):Verb(z):Noun(q):xs -> [(["The Most Interesting Man In The World"], [( ("i don't always " ++ z ++ " " ++ q), ("but when i do, i'm " ++ x))]), (["Am I The Only One Around Here"], [(("am i the only one around here"), ("who " ++ z ++ " " ++ q))]), (["success kid", "badluck brian"], [((x ++ " " ++ y), (z ++ " " ++ q))])]
- -      {- one of the meme type options will be chosen based on sent analysis on z ggg/blb -} 
- -            Noun(x):Verb("loses"):Noun(y):xs -> [(["This Is Where I'd Put My Trophy If I Had One"], [(("this is where I would put my " ++ y), ("if I had one"))])]            
- -            Place(x):Noun(y):Verb(z):Noun(q):xs -> [(["The Most Interesting Man In The World"], [( ("i don't always " ++ z), ("but when i do, i'm in " ++ x) )]), (["success kid", "scumbag steve"], [((y ++ " goes to " ++ x), (z ++ " " ++ q))]), (["success kid", "bad luck brian"], [(q ++ " in "++ x, "gets " ++ init z ++ "ed")])]
- -            Noun(x):Verb(y):Noun(z):xs -> [(["The Most Interesting Man In The World"], [( ("i don't always " ++ y), ("but when i do, it's " ++ z))])]
- -}
+            tagged tagged_sent = (\(TaggedSent(x)) -> x)tagged_sent{- (Data.List.head tagged_sent) -}
+            get_str pos_t = unpack ((\(Token(x)) -> x)(posToken pos_t))
 
-
-to_meme_CH :: [CH_mw] -> [([String], [(String, String)])]
-to_meme_CH mw =
-      let
-            {-meant to be used to deconstruct unspecified CH_mw -}
-            to_s :: CH_mw -> String
-            to_s inp = 
-                  case inp of
-                        NNP(x)    -> x
-                        PRP(x)    -> x
-                        IN(x)     -> x
-                        CD(x)     -> x
-                        RB(x)     -> x
-                        VBP(x)    -> x
-                        VBN(x)    -> x
-                        VBG(x)    -> x
-                        VB(x)     -> x
-                        JJ(x)     -> x
-                        NNS(x)    -> x
-                        NN(x)     -> x
-                        VBZ(x)    -> x
-                        CH_unk(x) -> x
+            to_m :: [POS NLP.Corpora.Conll.Tag] -> [([String], [(String, String)])]
+            to_m tagged_s =
+                  case tagged_s of
+                        []       -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")])]
+                        a:b:c:xs -> 
+                              {- TODO: i think this is only matched against the first 3 POS's. fix. -}
+                              case (Data.List.map posTag [a,b,c]) of
+                                    JJ:NNP:VBZ:rs  -> [(["the most interesting man in the world"], [("i don't always " ++ get_str c, "but when i do, i'm " ++ get_str a)])]
+                                    NNP:VBZ:NNP:rs -> [(["success kid", "bad luck brian"], [(get_str a ++ " " ++ get_str b, get_str c)]),(["success kid", "bad luck brian"], [(get_str a ++ " " ++ get_str b, get_str c)])]
+                                    NNP:NNP:NNP:rs -> [(["bad luck brian"], [(get_str a, "failed")])]
+                                    _              -> to_m xs
+                        x:xs      -> to_m xs
       in
-            case mw of
-                  JJ(x):NNP(y):VBZ(z):xs  -> [(["the most interesting man in the world"], [("i don't always " ++ z, "but when i do, i'm " ++ x)])]
-                  NNP(x):VBZ(y):NNP(z):xs -> [(["success kid", "bad luck brian"], [(x ++ " " ++ y, z)]),(["success kid", "bad luck brian"], [(x ++ " " ++ y, z)])]
-                  JJ(x):y:xs                  -> [(["bad luck brian", "scumbag steve"], [(x, to_s y)])]
-                  [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")])]
-                  {-l2 f3-}
-                  NN(x):IN(y):NN(z):IN(a):NNP(b):xs -> [(["bad luck brian", "scumbag steve"], [(a ++ " " ++ b, x ++ " " ++ y ++ " " ++ z)])]
-                  {-VBZ(x):xs -> [([""], [("","")]), ([""], [("", "")])]-}
-                  x:xs -> to_meme_CH(xs)
+            
+            to_m (tagged ts)
+            {-to_m ts-}
+                             
+                            
 add_delims :: [([String], [(String, String)])] -> String
 add_delims m_lst =
       let
@@ -154,7 +90,7 @@ add_delims m_lst =
             delim_one :: ([String], [(String, String)]) -> String
             delim_one (x, y) =
                   let
-                        xp = if length x == 2 then (\(x:y:xs) -> x ++ "|" ++ y) x else head x {- separates pos from neg option in meme type -}
+                        xp = if Data.List.length x == 2 then (\(x:y:xs) -> x ++ "|" ++ y) x else Data.List.head x {- separates pos from neg option in meme type -}
                         top_bot y =
                               case y of
                                     [(i, j), (q, z)] -> i ++ "#%" ++ j ++ "@@" ++ q ++ "#%" ++ z {- ++ "&&" -}
@@ -169,7 +105,7 @@ add_delims m_lst =
                         x:[]   -> "[\"" ++ x ++ "\"]"
                         _ -> ""
       in
-            case (map delim_one m_lst) of
+            case (Data.List.map delim_one m_lst) of
                   x:y:[] -> x ++ "&&" ++ y
                   x:[]   -> x
             
@@ -177,14 +113,11 @@ write_delim_memes_to_file :: (FilePath, FilePath) -> IO [IO ()]
 write_delim_memes_to_file(f_art, f_write) = 
       let
             write_to_file(x, y) =
-                  map (appendFile y) (map (++"\n")x)
-                  {-map (appendFile y)x-}
+                  Data.List.map (appendFile y) (Data.List.map (++"\n")x)
       in
             do
-                  artIOIO <- stm_l f_art
-                  let artIO = sequence artIOIO
-                  art <- artIO
-                  let memes = map add_delims (map to_meme_CH art)
+                  arts <- stm_ch f_art
+                  let memes = Data.List.map add_delims (Data.List.map to_meme_ch_cons arts)
                   {-return memes-}
                   return $ write_to_file(memes, f_write)
 
@@ -195,13 +128,13 @@ write_delim_memes_to_file(f_art, f_write) =
  -      do
  -            
  -            a <- getArgs
- -            write_pats_from_art(head (tail a), head a)
+ -            write_pats_from_art(Data.List.head (Data.List.tail a), Data.List.head a)
  -}
 
 {-article to delim meme-}
 main =
       do
             a <- getArgs
-            putStr (head (tail a))
-            writeIO <- write_delim_memes_to_file(head a, head(tail a))
+            putStr (Data.List.head (Data.List.tail a))
+            writeIO <- write_delim_memes_to_file(Data.List.head a, Data.List.head(Data.List.tail a))
             sequence writeIO

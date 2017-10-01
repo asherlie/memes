@@ -1,4 +1,5 @@
 import System.IO  
+import Control.Monad
 
 import System.Environment
 import Data.List
@@ -126,9 +127,7 @@ write_delim_memes_to_file(f_art, f_write) =
 main =
       do
             a <- getArgs
-            {-if a == [] then-}
-                  {-putStr "<article file> <output file>"-}
-            {-else-}
+            when (a == []) $ putStr "<article file> <output file> (-w)"
             if elem "-w" a then
                   do
                         write_pats_from_art(Data.List.head (Data.List.tail a), Data.List.head a)
@@ -136,4 +135,3 @@ main =
                   do
                         writeIO <- write_delim_memes_to_file(Data.List.head a, Data.List.head(Data.List.tail a))
                         sequence writeIO
-                        {-return $ ()-}

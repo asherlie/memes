@@ -127,11 +127,13 @@ write_delim_memes_to_file(f_art, f_write) =
 main =
       do
             a <- getArgs
-            when (a == []) $ putStr "<article file> <output file> (-w)"
-            if elem "-w" a then
-                  do
-                        write_pats_from_art(Data.List.head (Data.List.tail a), Data.List.head a)
-            else
-                  do
-                        writeIO <- write_delim_memes_to_file(Data.List.head a, Data.List.head(Data.List.tail a))
-                        sequence writeIO
+            {-when (a == []) (putStr "<article file> <output file> (-w)")-}
+            case a of
+                  []           -> putStrLn "<article file> <output file> (-w)"
+                  [a, b, "-w"] -> do
+                                    write_pats_from_art(b, a)
+                                    putStr ""
+                  a:b:xs       -> do
+                                    writeIO <- write_delim_memes_to_file(a, b)
+                                    sequence writeIO
+                                    putStr ""

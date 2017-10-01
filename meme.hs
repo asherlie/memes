@@ -55,24 +55,27 @@ to_meme_ch_cons :: TaggedSentence NLP.Corpora.Conll.Tag -> [([String], [(String,
 to_meme_ch_cons ts =
       let
             tagged tagged_sent = (\(TaggedSent(x)) -> x)tagged_sent{- (Data.List.head tagged_sent) -}
-            get_str pos_t = unpack ((\(Token(x)) -> x)(posToken pos_t))
+            to_meme :: [POS NLP.Corpora.Conll.Tag] -> [([String], [(String, String)])]
+            to_meme pos_l =
+                  let 
+                        tag_tok_tuple = Data.List.map (\x -> (posTag x, posToken x)) pos_l
 
-            to_m :: [POS NLP.Corpora.Conll.Tag] -> [([String], [(String, String)])]
-            to_m tagged_s =
-                  case tagged_s of
-                        []       -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")])]
-                        a:b:c:xs -> 
-                              {- TODO: i think this is only matched against the first 3 POS's. fix. -}
-                              case (Data.List.map posTag [a,b,c]) of
-                                    JJ:NNP:VBZ:rs  -> [(["the most interesting man in the world"], [("i don't always " ++ get_str c, "but when i do, i'm " ++ get_str a)])]
-                                    NNP:VBZ:NNP:rs -> [(["success kid", "bad luck brian"], [(get_str a ++ " " ++ get_str b, get_str c)]),(["success kid", "bad luck brian"], [(get_str a ++ " " ++ get_str b, get_str c)])]
-                                    NNP:NNP:NNP:rs -> [(["bad luck brian"], [(get_str a, "failed")])]
-                                    _              -> to_m xs
-                        x:xs      -> to_m xs
+                        get_str :: Token -> String
+                        get_str pos_t = unpack ((\(Token(x)) -> x)pos_t)
+
+                        parse_pos_l :: [(NLP.Corpora.Conll.Tag, Token)] -> [([String], [(String, String)])]
+                        parse_pos_l inp =
+                              case inp of
+                                     [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")])]
+                                     (JJ, a):(NNP, b):(VBZ, c):xs -> [(["the most interesting man in the world"], [("i don't always " ++ get_str c, "but when i do, i'm " ++ get_str a)])]
+                                     (NNP, a):(VBZ, b):(NNP, c):xs -> [(["success kid", "bad luck brian"], [(get_str a ++ " " ++ get_str b, get_str c)]),(["success kid", "bad luck brian"], [(get_str a ++ " " ++ get_str b, get_str c)])]
+                                     (NNP, a):(NNP, b):(NNP, c):xs ->[(["good guy greg"], [(get_str a, get_str b)])]
+                                     x:xs -> parse_pos_l xs
+                  in
+                        parse_pos_l tag_tok_tuple 
+
       in
-            
-            to_m (tagged ts)
-            {-to_m ts-}
+            to_meme (tagged ts)
                              
                             
 add_delims :: [([String], [(String, String)])] -> String

@@ -17,22 +17,6 @@ def _enumerate(spl):
         occ[bef] -= 1
     return spl
 def prep_data_chatter(fname, line_f=True):
-    def remove_tr(strn):
-        if strn == '' or strn[len(strn)-1] != ' ':
-            return strn
-        return remove_tr(strn[:-1])
-    # def _enumerate(strn):
-    def _enumerate(spl):
-        # spl = strn.split(' ')
-        occ = {x: 0 for x in spl}
-        for i in range(len(spl)):
-            if spl[i] in spl[i+1:]:
-                occ[spl[i]] += 1
-        for i in range(len(spl)-1, -1, -1): #iterate backwards
-            bef = spl[i]
-            spl[i] += ('_' + str(occ[spl[i]]))
-            occ[bef] -= 1
-        return spl
     ret = []
     if line_f:
         with open(fname, 'r') as f:
@@ -40,16 +24,8 @@ def prep_data_chatter(fname, line_f=True):
         for i in ff:
             tmp = i.strip('\n').split(' ')
             tmp_el = []
-            # tmp_el = set()
-            # tm_s = []
             for i in tmp:
-                # tm_s = i.split('/')
-                # if len(tm_s) != 2:
-                    # print(tm_s)
-                # tmp_el.append([remove_tr(tm_s[0]), tm_s[1]])
-                # tmp_el.append(remove_tr(i).split('/'))
                 tmp_el.append(i.split('/'))
-                # tmp_el.add(i.split('/'))
             ret.append(tmp_el)
     else:
         with open(fname, 'r') as f:
@@ -134,9 +110,6 @@ def create_pat_chat(pp_ch):
         for i in range(len(spl)):
             ret += ('(' + str(i) + ' : ' + spl[i] + '), ')
         return ret
-    # def add_num_dups(strn):
-        # return  strn + 'dup'
-    #trying to add nums to original find_pat or prep_chat
     patterns = []
     inp = ''
     c = 0

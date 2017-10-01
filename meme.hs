@@ -31,7 +31,6 @@ write_pats_from_art(f_write, f_art) =
                         write_pat :: String -> IO ()
                         write_pat str =
                               do
-                                    tagger <- defaultTagger
                                     let tagged = tagStr tagger str
                                     appendFile y (tagged ++ "\n")
                   in
@@ -126,18 +125,18 @@ write_delim_memes_to_file(f_art, f_write) =
 
 {-both main methods take in file to read, file to write-}
 {-article pat-}
+main =
+      do
+            
+            a <- getArgs
+            write_pats_from_art(Data.List.head (Data.List.tail a), Data.List.head a)
+
+{-article to delim meme-}
 {-
  -main =
  -      do
- -            
  -            a <- getArgs
- -            write_pats_from_art(Data.List.head (Data.List.tail a), Data.List.head a)
+ -            putStr (Data.List.head (Data.List.tail a))
+ -            writeIO <- write_delim_memes_to_file(Data.List.head a, Data.List.head(Data.List.tail a))
+ -            sequence writeIO
  -}
-
-{-article to delim meme-}
-main =
-      do
-            a <- getArgs
-            putStr (Data.List.head (Data.List.tail a))
-            writeIO <- write_delim_memes_to_file(Data.List.head a, Data.List.head(Data.List.tail a))
-            sequence writeIO

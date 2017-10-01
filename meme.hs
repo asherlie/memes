@@ -1,5 +1,4 @@
 import System.IO  
-import Control.Monad
 
 import System.Environment
 import Data.List
@@ -121,15 +120,13 @@ write_delim_memes_to_file(f_art, f_write) =
             do
                   arts <- stm_ch f_art
                   let memes = Data.List.map add_delims (Data.List.map to_meme_ch_cons arts)
-                  {-return memes-}
                   return $ write_to_file(memes, f_write)
 
 main =
       do
             a <- getArgs
-            {-when (a == []) (putStr "<article file> <output file> (-w)")-}
             case a of
-                  []           -> putStrLn "<article file> <output file> (-w)"
+                  []           -> putStrLn "<article file> <output file> [-w]\n     -w : write POS tagged articles to file for pattern finding"
                   [a, b, "-w"] -> do
                                     write_pats_from_art(b, a)
                                     putStr ""

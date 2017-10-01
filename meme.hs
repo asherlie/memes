@@ -123,20 +123,17 @@ write_delim_memes_to_file(f_art, f_write) =
                   {-return memes-}
                   return $ write_to_file(memes, f_write)
 
-{-both main methods take in file to read, file to write-}
-{-article pat-}
 main =
       do
-            
             a <- getArgs
-            write_pats_from_art(Data.List.head (Data.List.tail a), Data.List.head a)
-
-{-article to delim meme-}
-{-
- -main =
- -      do
- -            a <- getArgs
- -            putStr (Data.List.head (Data.List.tail a))
- -            writeIO <- write_delim_memes_to_file(Data.List.head a, Data.List.head(Data.List.tail a))
- -            sequence writeIO
- -}
+            {-if a == [] then-}
+                  {-putStr "<article file> <output file>"-}
+            {-else-}
+            if elem "-w" a then
+                  do
+                        write_pats_from_art(Data.List.head (Data.List.tail a), Data.List.head a)
+            else
+                  do
+                        writeIO <- write_delim_memes_to_file(Data.List.head a, Data.List.head(Data.List.tail a))
+                        sequence writeIO
+                        {-return $ ()-}

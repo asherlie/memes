@@ -126,7 +126,6 @@ main =
       do
             a <- getArgs
             case a of
-                  []           -> putStrLn "<article file> <output file> [-w]\n     -w : write POS tagged articles to file for pattern finding"
                   [a, b, "-w"] -> do
                                     write_pats_from_art(b, a)
                                     putStr ""
@@ -134,3 +133,4 @@ main =
                                     writeIO <- write_delim_memes_to_file(a, b)
                                     sequence writeIO
                                     putStr ""
+                  _            -> putStrLn "<article file> <output file> [-w]\n     -w : write POS tagged articles to file for pattern finding"

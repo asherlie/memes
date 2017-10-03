@@ -62,13 +62,33 @@ to_meme_ch_cons ts =
                         get_str :: Token -> String
                         get_str pos_t = unpack ((\(Token(x)) -> x)pos_t)
 
+                        bunch_strs :: [Token] -> String
+                        bunch_strs o_toks =
+                              let
+
+                                    bunch :: [Token] -> String
+                                    bunch toks =
+                                          case toks of
+                                                []   -> ""
+                                                x:xs -> " " ++ get_str x ++ bunch xs
+                              in
+                                    (\(x:xs) -> xs)(bunch o_toks)
+
                         parse_pos_l :: [(NLP.Corpora.Conll.Tag, Token)] -> [([String], [(String, String)])]
                         parse_pos_l inp =
                               case inp of
                                      [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")])]
                                      (JJ, a):(NNP, b):(VBZ, c):xs -> [(["the most interesting man in the world"], [("i don't always " ++ get_str c, "but when i do, i'm " ++ get_str a)])]
-                                     (NNP, a):(VBZ, b):(NNP, c):xs -> [(["success kid", "bad luck brian"], [(get_str a ++ " " ++ get_str b, get_str c)]),(["success kid", "bad luck brian"], [(get_str a ++ " " ++ get_str b, get_str c)])]
-                                     (NNP, a):(NNP, b):(NNP, c):xs ->[(["good guy greg"], [(get_str a, get_str b)])]
+                                     (NNP, a):(VBZ, b):(NNP, c):xs -> [(["success kid", "bad luck brian"], [(bunch_strs [a,b], get_str c)]),(["success kid", "bad luck brian"], [(bunch_strs [a,b], get_str c)])]
+                                     {-do i have anything written in that allows for diff text for pos, neg-}
+                                     {-NNP_0 NNP_1 IN_0 NNP_2 NNP_3 : 182 : Sparsholt Affair by Alan Hollinghurst-}
+                                     (NNP, a):(NNP, b):(IN, c):(NNP, d):(NNP, e):xs -> [(["mugatu so hot right now", "aint nobody got time for that"], [(bunch_strs [d,e], bunch_strs [a,b])])]
+                                     {-NN_0 IN_0 NN_1 IN_1 NN_2 : 99 : suit over nondisclosure of climate-}
+                                     {-TODO: choose best meme type for this-}
+                                     (NN, a):(IN, b):(NN, c):(IN, d):(NN, e):xs -> [(["good guy greg", "jackie chan wtf"], [(get_str a, bunch_strs [b,c,d,e])])]
+                                     {-NNP_0 NNP_1 CC_0 NNP_2 NNP_3 : 205 : Marry Waterson and David A-}
+                                     {-(NNP, a):(NNP, b):(CC, c):(NNP, d):(NNP, e):xs -> [(["good guy greg", "jackie chan wtf"], [(get_str ,"")])]-}
+                                     {-[(["ggg", "blb"], [("t", "b")])]-}
                                      x:xs -> parse_pos_l xs
                   in
                         parse_pos_l tag_tok_tuple 

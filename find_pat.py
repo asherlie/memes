@@ -5,6 +5,11 @@ import json
 def generate_pattern_list(fname, consec_words=4, min_occ=1):
     return create_pat_chat(pp_chat(find_p_chatter(prep_data_chatter(fname), consec_words), min_occ))
 
+def gather_all_patterns(fname, consec_words=4, min_occ=1):
+    ret = pp_chat(find_p_chatter(prep_data_chatter(fname), consec_words), min_occ)
+    # ret[2] is [] representation, not {} allowing easy retrieval by pattern number
+    return ret[2]
+
 def _enumerate(spl):
     # spl = strn.split(' ')
     occ = {x: 0 for x in spl}

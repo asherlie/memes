@@ -79,17 +79,19 @@ to_meme_ch_cons ts =
                               case inp of
                                      [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")])]
                                      (JJ, a):(NNP, b):(VBZ, c):xs -> [(["the most interesting man in the world"], [("i don't always " ++ get_str c, "but when i do, i'm " ++ get_str a)])]
-                                     (NNP, a):(VBZ, b):(NNP, c):xs -> [(["success kid", "bad luck brian"], [(bunch_strs [a,b], get_str c)]),(["success kid", "bad luck brian"], [(bunch_strs [a,b], get_str c)])]
+                                     (NNP, a):(VBZ, b):(NNP, c):xs -> [(["ancient aliens", "bad luck brian"], [(bunch_strs [a,b], get_str c)]),(["success kid", "bad luck brian"], [(bunch_strs [a,b], get_str c)])]
                                      {-do i have anything written in that allows for diff text for pos, neg-}
                                      {-NNP_0 NNP_1 IN_0 NNP_2 NNP_3 : 182 : Sparsholt Affair by Alan Hollinghurst-}
                                      (NNP, a):(NNP, b):(IN, c):(NNP, d):(NNP, e):xs -> [(["mugatu so hot right now", "aint nobody got time for that"], [(bunch_strs [d,e], bunch_strs [a,b])])]
                                      {-NN_0 IN_0 NN_1 IN_1 NN_2 : 99 : suit over nondisclosure of climate-}
                                      {-TODO: choose best meme type for this-}
-                                     (NN, a):(IN, b):(NN, c):(IN, d):(NN, e):xs -> [(["good guy greg", "jackie chan wtf"], [(get_str a, bunch_strs [b,c,d,e])])]
+                                     (NN, a):(IN, b):(NN, c):(IN, d):(NN, e):xs -> [(["success kid", "jackie chan wtf"], [(get_str a, bunch_strs [b,c,d,e])])]
                                      {-NNP_0 NNP_1 CC_0 NNP_2 NNP_3 : 205 : Marry Waterson and David A-}
-                                     {-(NNP, a):(NNP, b):(CC, c):(NNP, d):(NNP, e):xs -> [(["good guy greg", "jackie chan wtf"], [(get_str ,"")])]-}
-                                     {-[(["ggg", "blb"], [("t", "b")])]-}
+                                     (NNP, a):(NNP, b):(CC, c):(NNP, d):(NNP, e):xs -> [(["success kid", "scumbag steve"], [(bunch_strs [a,b] ,bunch_strs [d,e])])]
+                                     {-NN_0 IN_0 NNP_0 : 2953 : job with Uber-}
+                                     (x, a):(IN, b):(NNP, c):xs -> [(["yo dawg heard you"], [("yo dawg i heard you like " ++ get_str a, "so i got you " ++ get_str a ++ " " ++ bunch_strs [b,c])]),(["10 guy", "arthur fist"], [(get_str a, bunch_strs [b,c])])]
                                      x:xs -> parse_pos_l xs
+                                     {-[(["ggg", "blb"], [("t", "b")])]-}
                   in
                         parse_pos_l tag_tok_tuple 
 

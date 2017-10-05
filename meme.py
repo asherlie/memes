@@ -26,8 +26,8 @@ class Meme:
         def gen_meme(self, meme_id, top, bottom):
                 parameters = {
                                 'template_id': meme_id,
-                                'username': '____',
-                                'password': '____',
+                                'username': 'ubhacking2016',
+                                'password': 'ubhacking2016',
                                 'text0': top, #top text for meme
                                 'text1': bottom, #bottom text for meme
                                 }
@@ -48,7 +48,7 @@ class Meme:
             return ret
 
         def memes_from_f(self, delim_file):
-            with open(delim_file, 'r') as f:
+            with open(delim_file, 'r', encoding='utf-8') as f:
                 fi = f.read()
             f_memes = fi.split('\n')[:-1]
             memes = []
@@ -56,16 +56,16 @@ class Meme:
                 memes.append(self.parse(i))
             return memes
 
-        def gen_meme_from_m(self, mm, art):
+        def choose_meme_from_m(self, mm, art):
             mtu = mm[random.randrange(0, len(mm))]
             m_type = mtu[0][0]
-            # type
             if len(mtu[0]) == 2:
-                if self.sent_pos(art):
-                    m_type = mtu[0][0]
-                else:
+                if not self.sent_pos(art):
                     m_type = mtu[0][1]
-            return self.gen_meme(self.meme_to_id(m_type), mtu[1][0], mtu[1][1])
+            return (m_type, (mtu[1][0], mtu[1][1]))
+
+        def gen_meme_from_m(self, clarified):
+            return self.gen_meme(self.meme_to_id(clarified[0]), clarified[1][0], clarified[1][1])
 
         def sent_pos(self, strng):
                 sent = requests.post('http://text-processing.com/api/sentiment/', 'text=' + strng).json()

@@ -42,7 +42,7 @@ def get_articles_news(n, src):
             if len(arts) == n: break
         if len(arts) == n: break
     return arts
-def get_articles_guardian(n=50):
+def get_articles_guardian(n=50, verbose=True):
     base = 'https://content.guardianapis.com/search'
     arts = []
     i = 0
@@ -62,7 +62,7 @@ def get_articles_guardian(n=50):
             else:
                 arts.append([tmp_title, art['webUrl']])
             if len(arts) == n: return arts
-        print(str(len(arts)) + ' added so far')
+        if verbose: print(str(len(arts)) + ' articles grabbed so far')
     return arts
 
 def w2f(js_o, fname):

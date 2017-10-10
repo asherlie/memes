@@ -5,22 +5,31 @@ import os
 
 m = meme.Meme()
 
-def create_memes(n, stop_at_ml=False, filter_failure=False):
-    # def normalize(inp):
-        # if len(inp) != 
-    arts = articles.get_articles_guardian(n)
-    articles.w2f(arts, '.tmp_art_file')
-    os.popen('./meme .tmp_art_file .tmp_meme_file')
-    os.wait()
+def create_memes(n, stop_at_ml=False, filter_failure=False, verbose=True, print_steps=False, art=None):
+    if art != None:
+        if print_steps: print('using user supplied articles')
+        arts = articles.rff(art)
+    else: arts = articles.get_articles_guardian(n, verbose)
+    if print_steps: print('all articles in place')
+    if art == None:
+        articles.w2f(arts, '.tmp_art_file')
+        os.popen('./meme .tmp_art_file .tmp_meme_file')
+        os.wait()
+    else:
+        os.popen('./meme ' + art + ' .tmp_meme_file')
+        os.wait()
+    if print_steps: print('meme scaffolding placed')
     memes = m.memes_from_f('.tmp_meme_file')
     m_a_tuples = []
     for i in range(len(arts)):
         m_a_tuples.append((memes[i], arts[i]))
     if filter_failure:
         m_a_tuples = [x for x in m_a_tuples if x[0] != [(['bad luck brian'], ('tried to make a meme from this article', 'failed'))]]
-    os.popen('rm .tmp_art_file .tmp_meme_file')
+    if art == None: os.popen('rm .tmp_art_file')
+    os.popen('rm .tmp_meme_file')
     os.wait()
     if stop_at_ml:
+        if print_steps: print('stopping before final step')
         return [m.choose_meme_from_m(m_a_tuples[x][0], m_a_tuples[x][1][0]) for x in range(len(m_a_tuples))]
     else:
         final_memes = []
@@ -30,7 +39,23 @@ def create_memes(n, stop_at_ml=False, filter_failure=False):
                 final_memes.append(tmp_meme['data']['url'])
                 print(str(i) + '/' + str(len(m_a_tuples)))
         return final_memes
+
+def test_coverage(n, v=True, ps=False, a=None):
+    return len(create_memes(n, True, True, verbose=v, print_steps=ps, art=a))/n
+
 if __name__ == '__main__':
-    memes = create_memes(int(sys.argv[1]), 'stop' in sys.argv, 'filter' in sys.argv)
-    for i in memes:
-        print(i)
+    if 'test' in sys.argv:
+        user_art = None
+        if 'uart' in sys.argv:
+            # so when argv[1] is not numeric we don't cast to int 
+            n_inp = -1
+            user_art = sys.argv[1]
+        else:
+            n_inp = int(sys.argv[1])
+        ret = test_coverage(n_inp, 'silent' not in sys.argv, 'print' in sys.argv, user_art)
+        print(str(ret*100) + '% coverage')
+    else:
+        # TODO: add user art option to this standard path
+        memes = create_memes(int(sys.argv[1]), 'stop' in sys.argv, 'filter' in sys.argv)
+        for i in memes:
+            print(i)

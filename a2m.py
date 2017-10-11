@@ -10,7 +10,7 @@ def create_memes(n, stop_at_ml=False, filter_failure=False, verbose=True, print_
         if print_steps: print('using user supplied articles')
         arts = articles.rff(art)
     else: arts = articles.get_articles_guardian(n, verbose)
-    if print_steps: print('all articles in place')
+    if print_steps: print('all ' + str(len(arts)) + ' articles in place')
     if art == None:
         articles.w2f(arts, '.tmp_art_file')
         os.popen('./meme .tmp_art_file .tmp_meme_file')

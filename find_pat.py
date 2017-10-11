@@ -85,6 +85,8 @@ def find_p_chatter(prepped, consec_words=4):
     return updated
 
 def pp_chat(pats, min_occ=1, rev=False, must_include = [''], prnt=True):
+    #TODO:
+    #add filter for patterns already used - it can be hard to keep track of all of them, especially when using any type constructor
     relevant = []
     relev = {}
     def has_items(strn, items):

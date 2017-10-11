@@ -78,6 +78,9 @@ to_meme_ch_cons ts =
                         parse_pos_l inp =
                               case inp of
                                      [] -> [(["bad luck brian"], [("tried to make a meme from this article", "failed")])]
+                                     {-DT_0 JJ_0 NN_0 IN_0 DT_1 NN_1 : 113 : the vivid colours of a master // a profound portrait of a soul-}
+                                     {-TODO:-}
+                                     (DT, a):(JJ, b):(NN, c):(IN, d):(DT, e):(NN, f):xs ->  [(["tbd", "tbd"], [("t", "b")])]
                                      (JJ, a):(NNP, b):(VBZ, c):xs -> [(["the most interesting man in the world"], [("i don't always " ++ get_str c, "but when i do, i'm " ++ get_str a)])]
                                      (NNP, a):(VBZ, b):(NNP, c):xs -> [(["ancient aliens", "bad luck brian"], [(bunch_strs [a,b], get_str c)]),(["success kid", "bad luck brian"], [(bunch_strs [a,b], get_str c)])]
                                      {-do i have anything written in that allows for diff text for pos, neg-}
@@ -90,8 +93,18 @@ to_meme_ch_cons ts =
                                      (NNP, a):(NNP, b):(CC, c):(NNP, d):(NNP, e):xs -> [(["success kid", "scumbag steve"], [(bunch_strs [a,b] ,bunch_strs [d,e])])]
                                      {-NN_0 IN_0 NNP_0 : 2953 : job with Uber-}
                                      (x, a):(IN, b):(NNP, c):xs -> [(["yo dawg heard you"], [("yo dawg i heard you like " ++ get_str a, "so i got you " ++ get_str a ++ " " ++ bunch_strs [b,c])]),(["10 guy", "arthur fist"], [(get_str a, bunch_strs [b,c])])]
+                                     {-NNP_0 NNP_1 NN_0 : 4405 : African Republic conflict // Mexico City school // County Ladies jobless-}
+                                     {-TODO:-}
+                                     (x, a):(NNP, b):(NN, c):xs -> [(["tbd", "tbd"], [("t", "b")])]
+                                     {-NN_0 TO_0 VB_0 : 2845 : attempt to block // protest to power // failure to execute-}
+                                     {-TODO:-}
+                                     (NN, a):(TO, b):(VB, c):(x, d):xs -> [(["tbd", "tbd"], [("t", "b")])]
+                                     {-{NN_0, DT_0} NN_1 IN_0 : 3128 : feel squeeze after // a fifth after-}
+                                     {-TODO:-}
+                                     (x, a):(NN, b):(IN, c):(y, d):xs -> [(["tbd", "tbd"], [("t", "b")])]
+                                     {-NNP_0 NN_0 IN_0 : 2376 : Tesco staff under-}
                                      x:xs -> parse_pos_l xs
-                                     {-[(["ggg", "blb"], [("t", "b")])]-}
+                                     {-[(["tbd", "tbd"], [("t", "b")])]-}
                   in
                         parse_pos_l tag_tok_tuple 
 

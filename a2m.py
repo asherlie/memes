@@ -5,7 +5,7 @@ import os
 
 m = meme.Meme()
 
-def create_memes(n, stop_at_ml=False, filter_failure=False, verbose=True, print_steps=False, art=None):
+def create_memes(n, stop_at_ml=False, filter_failure=False, verbose=True, print_steps=False, art=None, r_len=False, test_mode=False):
     if art != None:
         if print_steps: print('using user supplied articles')
         arts = articles.rff(art)
@@ -30,7 +30,15 @@ def create_memes(n, stop_at_ml=False, filter_failure=False, verbose=True, print_
     os.wait()
     if stop_at_ml:
         if print_steps: print('stopping before final step')
-        return [m.choose_meme_from_m(m_a_tuples[x][0], m_a_tuples[x][1][0]) for x in range(len(m_a_tuples))]
+        # return [m.choose_meme_from_m(m_a_tuples[x][0], m_a_tuples[x][1][0]) for x in range(len(m_a_tuples))]
+        if not test_mode:
+            ret = []
+            for i in range(len(m_a_tuples)):
+                ret.append(m.choose_meme_from_m(m_a_tuples[i][0], m_a_tuples[i][1][0]))
+                if print_steps: print(str(i) + '/' + str(len(m_a_tuples)))
+        else: ret = [x[0] for x in m_a_tuples]
+        if r_len: return (ret, len(arts))
+        return ret
     else:
         final_memes = []
         for i in range(len(m_a_tuples)):
@@ -41,7 +49,8 @@ def create_memes(n, stop_at_ml=False, filter_failure=False, verbose=True, print_
         return final_memes
 
 def test_coverage(n, v=True, ps=False, a=None):
-    return len(create_memes(n, True, True, verbose=v, print_steps=ps, art=a))/n
+    mm = create_memes(n, True, True, verbose=v, print_steps=ps, art=a, r_len=True, test_mode=True)
+    return len(mm[0])/mm[1]
 
 if __name__ == '__main__':
     if 'test' in sys.argv:

@@ -7,27 +7,20 @@ class Meme:
 
         base = "https://api.imgflip.com/"
         reference = requests.get(base + "get_memes").json()
-        ref = {}
-        for i in reference['data']['memes']:
-                ref[i['name']] = i['id'] 
+        ref = {x['name'].upper(): x['id'] for x in reference['data']['memes']}
 
-        def meme_to_id(self, meme_name):
-                def to_cam(wrd):
-                        new_str = ''
-                        for i in wrd.split(' '):
-                                for ltr in range(len(i)):
-                                        if ltr == 0: new_str += (' ' + i[ltr].upper())
-                                        else: new_str += i[ltr]
-                        return new_str[1:len(new_str)]
-                if to_cam(meme_name) in self.ref: return self.ref[to_cam(meme_name)]
-                return "you fucked up"  
-
-
+        def meme_to_id(self, mn):
+                up = mn.upper()
+                if up in self.ref:
+                        return self.ref[up]
+                else:
+                        return 'invalid meme name'
+                
         def gen_meme(self, meme_id, top, bottom):
                 parameters = {
                                 'template_id': meme_id,
-                                'username': 'ubhacking2016',
-                                'password': 'ubhacking2016',
+                                'username': '_____________',
+                                'password': '_____________',
                                 'text0': top, #top text for meme
                                 'text1': bottom, #bottom text for meme
                                 }

@@ -3,6 +3,8 @@ import random
 import os
 import sys
 
+from textblob import TextBlob
+
 class Meme:
 
         base = "https://api.imgflip.com/"
@@ -61,12 +63,11 @@ class Meme:
             return self.gen_meme(self.meme_to_id(clarified[0]), clarified[1][0], clarified[1][1])
 
         def sent_pos(self, strng):
-                def clean_str(st):
-                    ret = ''
-                    for i in st:
-                        if ord(i) <= 128:
-                            ret += i
-                        else: ret += ' '
-                    return ret
-                sent = requests.post('http://text-processing.com/api/sentiment/', 'text=' + clean_str(strng)).json()
-                return sent['probability']['pos'] > sent['probability']['neg']
+            def clean_str(st):
+                ret = ''
+                for i in st:
+                    if ord(i) <= 128:
+                        ret += i
+                    else: ret += ' '
+                return ret
+            return TextBlob(strng).sentiment.polarity > 0

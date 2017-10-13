@@ -5,7 +5,7 @@ import os
 
 m = meme.Meme()
 
-def create_memes(n, stop_at_ml=False, filter_failure=False, verbose=True, print_steps=False, art=None, r_len=False, test_mode=False):
+def create_memes(n, stop_at_ml=False, filter_failure=False, verbose=True, print_steps=False, art=None, r_len=False, test_mode=False, keep_temp=False):
     if art != None:
         if print_steps: print('using user supplied articles')
         arts = articles.rff(art)
@@ -25,9 +25,10 @@ def create_memes(n, stop_at_ml=False, filter_failure=False, verbose=True, print_
         m_a_tuples.append((memes[i], arts[i]))
     if filter_failure:
         m_a_tuples = [x for x in m_a_tuples if x[0] != [(['bad luck brian'], ('tried to make a meme from this article', 'failed'))]]
-    if art == None: os.popen('rm .tmp_art_file')
-    os.popen('rm .tmp_meme_file')
-    os.wait()
+    if art == None and not keep_temp: os.popen('rm .tmp_art_file')
+    if not keep_temp:
+        os.popen('rm .tmp_meme_file')
+        os.wait()
     if stop_at_ml:
         if print_steps: print('stopping before final step')
         # return [m.choose_meme_from_m(m_a_tuples[x][0], m_a_tuples[x][1][0]) for x in range(len(m_a_tuples))]
@@ -48,8 +49,8 @@ def create_memes(n, stop_at_ml=False, filter_failure=False, verbose=True, print_
                 print(str(i) + '/' + str(len(m_a_tuples)))
         return final_memes
 
-def test_coverage(n, v=True, ps=False, a=None):
-    mm = create_memes(n, True, True, verbose=v, print_steps=ps, art=a, r_len=True, test_mode=True)
+def test_coverage(n, v=True, ps=False, a=None, kt=False):
+    mm = create_memes(n, True, True, verbose=v, print_steps=ps, art=a, r_len=True, test_mode=True, keep_temp=kt)
     return len(mm[0])/mm[1]
 
 if __name__ == '__main__':
@@ -61,9 +62,9 @@ if __name__ == '__main__':
     else:
         n_inp = int(sys.argv[1])
     if 'test' in sys.argv:
-        ret = test_coverage(n_inp, 'silent' not in sys.argv, 'print' in sys.argv, user_art)
+        ret = test_coverage(n_inp, 'silent' not in sys.argv, 'print' in sys.argv, user_art, 'keep' in sys.argv)
         print(str(ret*100) + '% coverage')
     else:
-        memes = create_memes(n_inp, 'stop' in sys.argv, 'filter' in sys.argv, 'silent' not in sys.argv, 'print' in sys.argv, art=user_art, r_len=False, test_mode=False)
+        memes = create_memes(n_inp, 'stop' in sys.argv, 'filter' in sys.argv, 'silent' not in sys.argv, 'print' in sys.argv, art=user_art, r_len=False, test_mode=False, keep_temp='keep' in sys.argv)
         for i in memes:
             print(i)

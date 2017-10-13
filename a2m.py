@@ -53,18 +53,17 @@ def test_coverage(n, v=True, ps=False, a=None):
     return len(mm[0])/mm[1]
 
 if __name__ == '__main__':
+    user_art = None
+    if 'uart' in sys.argv:
+        # so when argv[1] is not numeric we don't cast to int 
+        n_inp = -1
+        user_art = sys.argv[1]
+    else:
+        n_inp = int(sys.argv[1])
     if 'test' in sys.argv:
-        user_art = None
-        if 'uart' in sys.argv:
-            # so when argv[1] is not numeric we don't cast to int 
-            n_inp = -1
-            user_art = sys.argv[1]
-        else:
-            n_inp = int(sys.argv[1])
         ret = test_coverage(n_inp, 'silent' not in sys.argv, 'print' in sys.argv, user_art)
         print(str(ret*100) + '% coverage')
     else:
-        # TODO: add user art option to this standard path
-        memes = create_memes(int(sys.argv[1]), 'stop' in sys.argv, 'filter' in sys.argv)
+        memes = create_memes(n_inp, 'stop' in sys.argv, 'filter' in sys.argv, 'silent' not in sys.argv, 'print' in sys.argv, art=user_art, r_len=False, test_mode=False)
         for i in memes:
             print(i)

@@ -64,6 +64,10 @@ to_meme_ch_cons ts =
 
                         bunch_strs :: [Token] -> String
                         bunch_strs o_toks =
+                              (Data.List.foldr (++) "" (Data.List.map (++ " ") (Data.List.map get_str (Data.List.init o_toks))))++(get_str (Data.List.last o_toks))
+
+                        bunch_strs_deprecated :: [Token] -> String
+                        bunch_strs_deprecated o_toks =
                               let
 
                                     bunch :: [Token] -> String

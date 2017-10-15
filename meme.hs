@@ -1,5 +1,3 @@
-import System.IO  
-
 import System.Environment
 import Data.List
 import Data.Text
@@ -63,20 +61,8 @@ to_meme_ch_cons ts =
                         get_str pos_t = unpack ((\(Token(x)) -> x)pos_t)
 
                         bunch_strs :: [Token] -> String
-                        bunch_strs o_toks =
-                              (Data.List.foldr (++) "" (Data.List.map (++ " ") (Data.List.map get_str (Data.List.init o_toks))))++(get_str (Data.List.last o_toks))
-
-                        bunch_strs_deprecated :: [Token] -> String
-                        bunch_strs_deprecated o_toks =
-                              let
-
-                                    bunch :: [Token] -> String
-                                    bunch toks =
-                                          case toks of
-                                                []   -> ""
-                                                x:xs -> " " ++ get_str x ++ bunch xs
-                              in
-                                    (\(x:xs) -> xs)(bunch o_toks)
+                        bunch_strs toks =
+                              Data.List.foldr (++) (get_str (Data.List.last toks)) (Data.List.map (++ " ") (Data.List.map get_str (Data.List.init toks)))
 
                         parse_pos_l :: [(NLP.Corpora.Conll.Tag, Token)] -> [([String], [(String, String)])]
                         parse_pos_l inp =
@@ -119,6 +105,7 @@ to_meme_ch_cons ts =
 add_delims :: [([String], [(String, String)])] -> String
 add_delims m_lst =
       let
+            delim_lst = Data.List.map delim_one m_lst
             {-
              -delim guide:
              -      |  :: separates positive option from negative
@@ -131,24 +118,17 @@ add_delims m_lst =
             delim_one :: ([String], [(String, String)]) -> String
             delim_one (x, y) =
                   let
-                        xp = if Data.List.length x == 2 then (\(x:y:xs) -> x ++ "|" ++ y) x else Data.List.head x {- separates pos from neg option in meme type -}
+                        {- separates pos from neg option in meme type -}
+                        xp = if Data.List.length x == 2 then (\(x:y:xs) -> x ++ "|" ++ y) x else Data.List.head x
                         top_bot y =
                               case y of
-                                    [(i, j), (q, z)] -> i ++ "#%" ++ j ++ "@@" ++ q ++ "#%" ++ z {- ++ "&&" -}
-                                    [(i, j)]         -> i ++ "#%" ++ j {- ++ "&&" -}
+                                    [(i, j), (q, z)] -> i ++ "#%" ++ j ++ "@@" ++ q ++ "#%" ++ z
+                                    [(i, j)]         -> i ++ "#%" ++ j
                   in
                         xp ++ "^^" ++ (top_bot y)
-            add_brackets :: [String] -> String            
-            add_brackets sl =
-                  case sl of
-                        {- assume for now that there should only ever be two outermost ops -}
-                        x:y:[] -> "[\"" ++ x ++ "\",\"" ++ y ++ "\"]"
-                        x:[]   -> "[\"" ++ x ++ "\"]"
-                        _ -> ""
       in
-            case (Data.List.map delim_one m_lst) of
-                  x:y:[] -> x ++ "&&" ++ y
-                  x:[]   -> x
+            {- adds &&'s -}
+            Data.List.foldr (\x y -> x ++ "&&" ++ y) (Data.List.last delim_lst) (Data.List.init delim_lst)
             
 write_delim_memes_to_file :: (FilePath, FilePath) -> IO [IO ()]
 write_delim_memes_to_file(f_art, f_write) = 

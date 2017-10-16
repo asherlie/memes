@@ -20,20 +20,12 @@ load_json str =
 
 {-tags articles from file, writes tagged articles to another file in a format compatible with find_pat-}
 {-this function is mean to to be used in conjunction with the python pattern finder-}
-write_pats_from_art :: (FilePath, FilePath) -> IO [()]
+write_pats_from_art :: (FilePath, FilePath) -> IO ()
 write_pats_from_art(f_write, f_art) =
       let
-            write_pats :: NLP.Types.Tag t => (POSTagger t, [String], FilePath) -> IO [()]
+            write_pats :: NLP.Types.Tag t => (POSTagger t, [String], FilePath) -> IO ()
             write_pats(tagger, x, y) =
-                  let
-                        write_pat :: String -> IO ()
-                        write_pat str =
-                              do
-                                    let tagged = tagStr tagger str
-                                    appendFile y (tagged ++ "\n")
-                  in
-                        do
-                              sequence (Data.List.map write_pat x)
+                  appendFile y (tagStr tagger (Data.List.foldl1 (\x y -> x ++ "\n" ++ y) x))
       in
             do
                   tagger <- defaultTagger

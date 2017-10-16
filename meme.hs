@@ -130,11 +130,13 @@ add_delims m_lst =
             {- adds &&'s -}
             Data.List.foldr (\x y -> x ++ "&&" ++ y) (Data.List.last delim_lst) (Data.List.init delim_lst)
             
-write_delim_memes_to_file :: (FilePath, FilePath) -> IO [IO ()]
+write_delim_memes_to_file :: (FilePath, FilePath) -> IO (IO ())
 write_delim_memes_to_file(f_art, f_write) = 
       let
             write_to_file(x, y) =
-                  Data.List.map (appendFile y) (Data.List.map (++"\n")x)
+                  {- see if appendFile is too slow with inputs this big -}
+                  {- if so, revert to map (appendFile y) [x] -}
+                  appendFile y (Data.List.foldr1 (\x y -> x ++ "\n" ++ y) x)
       in
             do
                   arts <- stm_ch f_art
@@ -150,6 +152,6 @@ main =
                                     putStr ""
                   a:b:xs       -> do
                                     writeIO <- write_delim_memes_to_file(a, b)
-                                    sequence writeIO
+                                    perform <- writeIO
                                     putStr ""
                   _            -> putStrLn "<article file> <output file> [-w]\n     -w : write POS tagged articles to file for pattern finding"

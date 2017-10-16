@@ -36,7 +36,7 @@ def create_memes(n, stop_at_ml=False, filter_failure=False, verbose=True, print_
             ret = []
             for i in range(len(m_a_tuples)):
                 ret.append(m.choose_meme_from_m(m_a_tuples[i][0], m_a_tuples[i][1][0]))
-                if print_steps: print(str(i) + '/' + str(len(m_a_tuples)))
+                if print_steps: print(str(i) + '/' + str(len(m_a_tuples)) + ' memes clarified')
         else: ret = [x[0] for x in m_a_tuples]
         if r_len: return (ret, len(arts))
         return ret
@@ -46,7 +46,7 @@ def create_memes(n, stop_at_ml=False, filter_failure=False, verbose=True, print_
             tmp_meme = m.gen_meme_from_m(m.choose_meme_from_m(m_a_tuples[i][0], m_a_tuples[i][1][0])).json()
             if 'data' in tmp_meme:
                 final_memes.append(tmp_meme['data']['url'])
-                if print_steps: print(str(i) + '/' + str(len(m_a_tuples)))
+                if print_steps: print(str(i) + '/' + str(len(m_a_tuples)) + ' memes created')
         return final_memes
 
 def test_coverage(n, v=True, ps=False, a=None, kt=False):

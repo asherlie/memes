@@ -45,9 +45,8 @@ class Meme:
         def memes_from_f(self, delim_file):
             with open(delim_file, 'r', encoding='utf-8') as f:
                 fi = f.read()
-            f_memes = fi.split('\n')[:-1]
             memes = []
-            for i in f_memes:
+            for i in fi.split('\n'):
                 memes.append(self.parse(i))
             return memes
 

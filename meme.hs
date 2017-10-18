@@ -1,6 +1,6 @@
 import System.Environment
 import Data.List
-import Data.Text
+import Data.Text (pack, unpack)
 
 import qualified Data.ByteString.Lazy as B
 import Data.Aeson
@@ -19,18 +19,18 @@ load_json str =
             return $ ((\(Just(x)) -> x)decoded)
 
 {-tags articles from file, writes tagged articles to another file in a format compatible with find_pat-}
-{-this function is mean to to be used in conjunction with the python pattern finder-}
+{-this function is meant to to be used in conjunction with the python pattern finder-}
 write_pats_from_art :: (FilePath, FilePath) -> IO ()
 write_pats_from_art(f_write, f_art) =
       let
             write_pats :: NLP.Types.Tag t => (POSTagger t, [String], FilePath) -> IO ()
             write_pats(tagger, x, y) =
-                  appendFile y (tagStr tagger (Data.List.foldl1 (\x y -> x ++ "\n" ++ y) x))
+                  appendFile y (tagStr tagger (foldl1 (\x y -> x ++ "\n" ++ y) x))
       in
             do
                   tagger <- defaultTagger
                   arts <- load_json f_art
-                  write_pats(tagger, (Data.List.map (\(x:y:xs) -> x)arts), f_write)
+                  write_pats(tagger, (map (\(x:y:xs) -> x)arts), f_write)
 
 
 stm_ch :: FilePath -> IO [TaggedSentence NLP.Corpora.Conll.Tag]
@@ -38,23 +38,23 @@ stm_ch f_art =
       do
             tagger <- defaultTagger
             arts <- load_json f_art
-            return $ Data.List.map Data.List.head (Data.List.map (tag tagger) (Data.List.map pack (Data.List.map Data.List.head arts)))
+            return $ map head (map (tag tagger) (map pack (map head arts)))
 
 to_meme_ch_cons :: TaggedSentence NLP.Corpora.Conll.Tag -> [([String], [(String, String)])]
 to_meme_ch_cons ts =
       let
-            tagged tagged_sent = (\(TaggedSent(x)) -> x)tagged_sent{- (Data.List.head tagged_sent) -}
+            tagged tagged_sent = (\(TaggedSent(x)) -> x)tagged_sent{- (head tagged_sent) -}
             to_meme :: [POS NLP.Corpora.Conll.Tag] -> [([String], [(String, String)])]
             to_meme pos_l =
                   let 
-                        tag_tok_tuple = Data.List.map (\x -> (posTag x, posToken x)) pos_l
+                        tag_tok_tuple = map (\x -> (posTag x, posToken x)) pos_l
 
                         get_str :: Token -> String
                         get_str pos_t = unpack ((\(Token(x)) -> x)pos_t)
 
                         bunch_strs :: [Token] -> String
                         bunch_strs toks =
-                              Data.List.foldr (++) (get_str (Data.List.last toks)) (Data.List.map (++ " ") (Data.List.map get_str (Data.List.init toks)))
+                              foldr (++) (get_str (last toks)) (map (++ " ") (map get_str (init toks)))
 
                         parse_pos_l :: [(NLP.Corpora.Conll.Tag, Token)] -> [([String], [(String, String)])]
                         parse_pos_l inp =
@@ -97,7 +97,7 @@ to_meme_ch_cons ts =
 add_delims :: [([String], [(String, String)])] -> String
 add_delims m_lst =
       let
-            delim_lst = Data.List.map delim_one m_lst
+            delim_lst = map delim_one m_lst
             {-
              -delim guide:
              -      |  :: separates positive option from negative
@@ -111,7 +111,7 @@ add_delims m_lst =
             delim_one (x, y) =
                   let
                         {- separates pos from neg option in meme type -}
-                        xp = if Data.List.length x == 2 then (\(x:y:xs) -> x ++ "|" ++ y) x else Data.List.head x
+                        xp = if length x == 2 then (\(x:y:xs) -> x ++ "|" ++ y) x else head x
                         top_bot y =
                               case y of
                                     [(i, j), (q, z)] -> i ++ "#%" ++ j ++ "@@" ++ q ++ "#%" ++ z
@@ -120,7 +120,7 @@ add_delims m_lst =
                         xp ++ "^^" ++ (top_bot y)
       in
             {- adds &&'s -}
-            Data.List.foldr (\x y -> x ++ "&&" ++ y) (Data.List.last delim_lst) (Data.List.init delim_lst)
+            foldr (\x y -> x ++ "&&" ++ y) (last delim_lst) (init delim_lst)
             
 write_delim_memes_to_file :: (FilePath, FilePath) -> IO (IO ())
 write_delim_memes_to_file(f_art, f_write) = 
@@ -128,11 +128,11 @@ write_delim_memes_to_file(f_art, f_write) =
             write_to_file(x, y) =
                   {- see if appendFile is too slow with inputs this big -}
                   {- if so, revert to map (appendFile y) [x] -}
-                  appendFile y (Data.List.foldr1 (\x y -> x ++ "\n" ++ y) x)
+                  appendFile y (foldr1 (\x y -> x ++ "\n" ++ y) x)
       in
             do
                   arts <- stm_ch f_art
-                  let memes = Data.List.map add_delims (Data.List.map to_meme_ch_cons arts)
+                  let memes = map add_delims (map to_meme_ch_cons arts)
                   return $ write_to_file(memes, f_write)
 
 main =

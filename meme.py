@@ -3,6 +3,9 @@ import random
 import os
 import sys
 
+import tst_img
+import time
+import imgtxt
 from textblob import TextBlob
 
 class Meme:
@@ -18,6 +21,30 @@ class Meme:
                 else:
                         return 'invalid meme name'
                 
+        def gen_meme_pillow(self, fn, top, bottom):
+            def rm_d(st):
+                ret = ''
+                for i in st:
+                    if i != '.':
+                        ret += i
+                return ret
+
+            # fn_o = rm_d(str(fn)) + '.png'
+            fn_o = rm_d(str(time.time())) + '.png'
+            imgtxt.text_to_img('resources/img/'+str(fn)+'.jpg', top, bottom, (10,10), 'resources/font/impact-opt.ttf' , 'output/' + fn_o)
+            return fn_o
+
+        def gen_meme_github_exp(self, fn, top, bottom):
+            def rm_d(st):
+                ret = ''
+                for i in st:
+                    if i != '.':
+                        ret += i
+                return ret
+            fn_o = rm_d + '.png'
+            tst_img.make_meme(top, bottom, 'resources/img/'+str(fn)+'.jpg', 'output/'+fn_o)
+            return fn_o
+
         def gen_meme(self, meme_id, top, bottom):
                 parameters = {
                                 'template_id': meme_id,
@@ -59,7 +86,9 @@ class Meme:
             return (m_type, (mtu[1][0], mtu[1][1]))
 
         def gen_meme_from_m(self, clarified):
-            return self.gen_meme(self.meme_to_id(clarified[0]), clarified[1][0], clarified[1][1])
+            # return self.gen_meme_pillow(self.meme_to_id(clarified[0]), clarified[1][0], clarified[1][1])
+            return self.gen_meme_github_exp(self.meme_to_id(clarified[0]), clarified[1][0], clarified[1][1])
+            # return self.gen_meme(self.meme_to_id(clarified[0]), clarified[1][0], clarified[1][1])
 
         def sent_pos(self, strng):
             def clean_str(st):
